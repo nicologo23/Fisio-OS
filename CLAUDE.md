@@ -63,7 +63,7 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 - Ilustraciones: dibujos SVG de figura de palitos generados por código (`PO`, `PF`, `AR`, `pic`…), animados con CSS.
 - Fisioterapia: `ZN` (52 zonas del cuerpo), `bodyChart(f)`, `sev()`/`sevLevel()` (gravedad por días de baja), `grpReport(g)` (informe de grupo).
 - PDFs: `buildPDF`, `buildGroupPDF`, `pdfSave` (en iOS usa la hoja de compartir; si no, descarga).
-- Copias: `expFile` / `exp` (exportar `st` como JSON), `imp` y `#impf` (importar: sustituye todo; lo que falte queda como lápida), aviso a los 14 días (`bkBanner`).
+- Copias: `expFile` / `exp` (exportar `st` como JSON), `imp` y `#impf` (importar: sustituye todo, lo que falte queda como lápida; ambos avisan con `confirm()` antes: textos `CONF_EXP` / `CONF_IMP`), aviso a los 14 días (`bkBanner`).
 - Avisos fijos en rojo `#saveerr` (`avisoGuardado`, en `10-copias.js`): fallo al guardar (desaparece al guardar bien) o datos dañados/antiguos ilegibles (permanece).
 
 ## Modelo de datos (`st`)
@@ -91,12 +91,12 @@ Documento completo (arquitectura, decisiones, condiciones de Google, limitacione
 - **Interfaz del proveedor** (lo único que el motor usa): `configurado()`, `conectado()`, `preparar()`, `conectar()` (desde un toque), `desconectar()`, `invalidar()`, `listar()→[{id,nombre,version}]`, `leer(id)`, `escribir(nombre,id,doc)`. Los errores llevan `codigo` (`red`, `auth`, `cancelado`…) y `mensaje` en español.
 - **ID de cliente de Google:** NO está en el código (el repositorio es público y las condiciones de Google desaconsejan incrustar credenciales en proyectos de código abierto). Se pega en Datos y se queda en `localStorage` (`plan_cid`) de cada dispositivo. Nunca subir tokens ni secretos de cliente. La app de Google sigue en **modo Testing** (hasta 100 usuarios de prueba; el permiso se vuelve a pedir cada 7 días). **No pasar a producción** hasta que el usuario y Claude hayan comprobado juntos sincronización, uso sin conexión y recuperación de datos (guía de pruebas manuales).
 - **Pruebas en dispositivos reales pendientes** (no se pueden automatizar): renovación del permiso (~1 h) en iPhone/iPad/Opera, comportamiento tras 7 días en modo Testing, iPad, cierre de ventana de Google en modo app, Opera instalada como app. `prueba-drive.html` (página aparte, no toca datos) se mantiene mientras se hacen esas pruebas; cuando no haga falta, borrarla junto con la excepción `/prueba-` de `sw.js`.
-- **Riesgos conocidos:** (1) las condiciones de la API de Drive prohíben copias de seguridad de contenido de la app sin consentimiento y no definen el límite; la app sincroniza datos propios del usuario con su consentimiento explícito en su propia cuenta, pero conviene revisarlo si algún día se publica; (2) importar una copia sustituye todo y, con la sincronización, **esa sustitución se replica a los demás dispositivos** (hay que confirmarla: pendiente de decisión del usuario); (3) un hijo creado en un dispositivo cuyo padre se borró en otro queda oculto como huérfano (no se pierde: queda retenido).
+- **Riesgos conocidos:** (1) las condiciones de la API de Drive prohíben copias de seguridad de contenido de la app sin consentimiento y no definen el límite; la app sincroniza datos propios del usuario con su consentimiento explícito en su propia cuenta, pero conviene revisarlo si algún día se publica; (2) importar una copia sustituye todo a propósito (avisa antes) y, con la sincronización, **esa sustitución se replica a los demás dispositivos**; (3) un hijo creado en un dispositivo cuyo padre se borró en otro queda oculto como huérfano (no se pierde: queda retenido).
 
 ## Problemas conocidos (no arreglar de pasada: pedir confirmación)
 Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - (Resueltos con la capa de datos: fallo de escritura silencioso y sobrescritura de datos corruptos; ahora hay aviso rojo y los registros dañados se conservan.)
-- Importar una copia **sustituye todo sin pedir confirmación** (y con la sincronización activada, la sustitución se replica en los demás dispositivos).
+- (Resuelto 25/11/2026, decisión del usuario: **importar sustituye todo a propósito**, avisa antes y la sustitución se replica a los demás dispositivos; **exportar** incluye todos los datos y también avisa.)
 - El botón "Cambiar tema" escribe `data-theme`, que ningún CSS lee: no hace nada (regresión del rediseño).
 - `today()` usa `toISOString()` (UTC): cerca de medianoche puede dar el día anterior/siguiente.
 - Editar una anotación clínica solo permite cambiar texto y fecha; añadir una exige texto o medida.
@@ -109,6 +109,7 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - `tests/datos.js`: migración desde localStorage y del esquema 1 al 2, versiones por registro, guardar solo lo cambiado, reabrir, lápidas, orden, ids repetidos, registros dañados/huérfanos, fallo de escritura y reintento, dispositivo nuevo (usa `fake-indexeddb`).
 - `tests/sync.js`: varios dispositivos simulados contra un Google Drive simulado (proveedor y motor reales): recuperación en dispositivo nuevo, sincronizar al abrir, offline, permiso caducado/reconectar, conflictos (conservar, usar, descartar), resolución independiente idéntica, editar vs borrar, reloj atrasado, archivos extraños, límite 429, desconectar, simulación al azar con 3 dispositivos (`SEMILLA=n npm test` para otra semilla).
 - `tests/smoke.js`: carga sin errores, las 8 pestañas pintan, 3 estilos, mapa corporal, biblioteca, fisio/grupos.
+- Copias manuales (en `tests/datos.js` y `tests/sync.js`): la copia incluye todo, avisa antes de exportar e importar, importar sustituye todo y llega a los demás dispositivos.
 - `tests/flows.js`: asignar semana, lesión → anotación → resumen → alta → reabrir, 3 PDFs, exportar/importar copia.
 - Los "CONOCIDO" que imprime no fallan la suite; cuando se arregle uno aparecerá como "RESUELTO": actualizar la lista de arriba.
 - **No cubren**: aspecto visual, iPhone/iPad reales, instalación PWA, actualización del service worker, compartir PDF, rendimiento. Eso se prueba a mano (lista de comprobaciones en la auditoría, sección 15-H).

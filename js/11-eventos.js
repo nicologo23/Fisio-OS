@@ -46,7 +46,7 @@ else if(a=='selc'){st.cc=b.dataset.id;save();render()}
 else if(a=='selr'){st.active=b.dataset.id;save();render()}
 else if(a=='fsec'){fsec[b.dataset.k]=!secOn(b.dataset.k);render()}
 else if(a=='fback'){st.fcase=null;fe=null;fsum='';save();render()}
-else if(a=='expf'){expFile()}
+else if(a=='expf'){if(confirm(CONF_EXP))expFile()}
 else if(a=='gobk'){tab='dat';render()}
 else if(a=='pdfshare'){pdfGo()}
 else if(a=='pdfx'){pdfX()}
@@ -68,8 +68,8 @@ else if(a=='delr'){st.routines=st.routines.filter(x=>x.id!=r.id);st.active=null;
 else if(a=='rm'){r.items.splice(i,1);save();render()}
 else if(a=='up'&&i>0){[r.items[i-1],r.items[i]]=[r.items[i],r.items[i-1]];save();render()}
 else if(a=='dn'&&i<r.items.length-1){[r.items[i+1],r.items[i]]=[r.items[i],r.items[i+1]];save();render()}
-else if(a=='exp'){bkTouch();$('#bk').value=JSON.stringify(st);$('#bk').select();flash('Copia generada')}
-else if(a=='imp'){try{const d=JSON.parse($('#bk').value);if(!d||!Array.isArray(d.routines))throw 0;st=Object.assign({custom:[],routines:[],week:{},active:null,clients:[],cc:null,ov:{},groups:[]},d);fixCases();save();flash('Importado')}catch(e){flash('JSON no válido')}}
+else if(a=='exp'){if(!confirm(CONF_EXP))return;bkTouch();$('#bk').value=JSON.stringify(st);$('#bk').select();flash('Copia generada')}
+else if(a=='imp'){try{const d=JSON.parse($('#bk').value);if(!d||!Array.isArray(d.routines))throw 0;if(!confirm(CONF_IMP)){flash('Importación cancelada: no se ha cambiado nada');return}st=Object.assign({custom:[],routines:[],week:{},active:null,clients:[],cc:null,ov:{},groups:[]},d);fixCases();save();flash('Importado')}catch(e){flash('JSON no válido')}}
 else if(a=='theme'){const h=document.documentElement;const dark=h.dataset.theme?h.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;h.dataset.theme=dark?'light':'dark'}});
 document.addEventListener('input',ev=>{const t=ev.target;
 if(t.id=='q'){fq=t.value;lim=60;list()}
