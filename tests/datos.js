@@ -103,5 +103,32 @@ const abrir = (idb, o) => open(Object.assign({ idb, wait: 500, seed: false }, o 
   const idb4 = new IDBFactory(); let X = abrir(idb4, { ls: { plan_v1: '{esto no es json' } }); await X.ready();
   T('datos antiguos dañados: no se importan, se avisa y se conservan', X.S().clients.length == 0 && !!X.d.getElementById('saveerr') && X.w.localStorage.getItem('plan_v1') == '{esto no es json' && !X.w.localStorage.getItem('plan_v1_migrado'));
   X.close();
+
+  // 9. Migración del esquema 1 al 2 (versiones por registro para sincronizar): no se pierde nada
+  const idb5 = new IDBFactory(); let P = abrir(idb5, { seed: true }); await P.ready();
+  await P.w.eval(`(async()=>{const d=Datos._db(),t=d.transaction(['registros','meta'],'readwrite'),R=t.objectStore('registros');
+    const todos=await new Promise(ok=>{const q=R.getAll();q.onsuccess=()=>ok(q.result)});
+    todos.forEach(r=>{delete r.vv;delete r.pend;R.put(r)});t.objectStore('meta').put(1,'esquema');await new Promise(ok=>{t.oncomplete=ok})})()`);
+  const antes9 = JSON.stringify(norm(P.S())); P.close();
+  let Q = abrir(idb5); await Q.ready();
+  const rq = await Q.Datos.registros(0), dev = Q.Datos.id();
+  T('esquema 1 -> 2: los datos son idénticos', JSON.stringify(norm(Q.S())) == antes9 && Q.errs.length == 0);
+  T('esquema 1 -> 2: todos los registros reciben versión de este dispositivo y quedan pendientes de subir', rq.length > 0 && rq.every(r => r.vv && r.vv[dev] == 1 && r.pend == 1));
+  T('esquema 1 -> 2: el esquema queda anotado', await Q.w.eval(`new Promise(ok=>{const q=Datos._db().transaction('meta').objectStore('meta').get('esquema');q.onsuccess=()=>ok(q.result)})`) == 2);
+  T('esquema 1 -> 2: pendientes = registros', Q.Datos.pendientes() == rq.length);
+  Q.close();
+  let Q2 = abrir(idb5); await Q2.ready();
+  T('esquema 2: reabrir no vuelve a migrar ni a escribir', Q2.Datos.pendientes() == rq.length && (await Q2.Datos.registros(0)).every(r => r.vv[dev] == 1));
+  Q2.close();
+
+  // 10. Cada cambio local sube la versión del registro y deja lápida con versión al borrar
+  const idb6 = new IDBFactory(); let V6 = abrir(idb6, { seed: true }); await V6.ready();
+  V6.w.eval("st.clients[0].notes='uno';save()"); await V6.flush();
+  const d6 = V6.Datos.id(), r6 = (await V6.Datos.registros(0)).find(r => r.k == 'client/' + V6.S().clients[0].id);
+  T('versión: editar suma 1 al contador de este dispositivo', r6.vv[d6] == 2 && r6.pend == 1);
+  V6.w.eval("st.clients.splice(2,1);save()"); await V6.flush();
+  const lap6 = (await V6.Datos.registros(0)).filter(r => r.deletedAt);
+  T('versión: la lápida lleva versión y está pendiente', lap6.length >= 1 && lap6.every(r => r.vv[d6] == 2 && r.pend == 1 && r.data === null));
+  V6.close();
   H0.finish();
 })().catch(e => { console.log('EXCEPCIÓN:', e.stack); process.exit(1); });

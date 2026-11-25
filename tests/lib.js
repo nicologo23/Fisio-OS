@@ -24,6 +24,7 @@ function open(opts = {}) {
     runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/',
     beforeParse(w) {
       w.indexedDB = idb; w.IDBKeyRange = IDBKeyRange;
+      if (opts.before) opts.before(w);   // gancho para que una prueba prepare la ventana (p. ej. simular Google)
       if (seed) w.localStorage.setItem('plan_v1', JSON.stringify(demo()));   // la app lo importa a IndexedDB al arrancar
       for (const k in ls) w.localStorage.setItem(k, ls[k]);
       w.localStorage.setItem('plan_bk', new Date().toISOString().slice(0, 10));

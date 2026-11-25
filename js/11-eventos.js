@@ -1,6 +1,6 @@
 // Pestañas, render() y manejo de eventos (click / input / change)
 const V={hoy,lib,rut,sem,cli,fis,grp,dat};
-function render(){nav();$('#app').innerHTML=bkBanner()+V[tab]();if(tab=='lib')list();document.body.dataset.tab=tab}
+function render(){nav();$('#app').innerHTML=bkBanner()+V[tab]();if(tab=='lib')list();document.body.dataset.tab=tab;Sync.pintar()}
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-a]');if(!b||b.tagName=='SELECT')return;const a=b.dataset.a,i=+b.dataset.i,r=cur();
 if(a=='tab'){tab=b.dataset.k;showTxt='';fsum='';delArm=null;render();return}
 if(a=='toR')addToR(b.dataset.id);
@@ -51,6 +51,7 @@ else if(a=='gobk'){tab='dat';render()}
 else if(a=='pdfshare'){pdfGo()}
 else if(a=='pdfx'){pdfX()}
 else if(a=='updgo'){location.reload()}
+else if(a.slice(0,2)=='sy'){Sync.accion(a,b)}
 else if(a=='newweek'){const has=Object.values(st.week).some(Boolean);if(has&&delArm!='week'){delArm='week';render();return}st.week={};delArm=null;save();render();flash('Semana nueva')}
 else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').value):cc();if(!c){flash('Elige un deportista');return}const sn=weekSnap();if(!sn.some(d=>d.name)){flash('La semana está vacía');return}const nm=a=='aw'?$('#wn').value.trim():'';cw(c).unshift({id:uid('w'),date:today(),name:nm||'Semana del '+today(),note:'',days:sn});st.week={};delArm=null;save();flash('Semana asignada a '+c.name+' y semana vaciada');render()}
 else if(a=='wdel'){cw(cc()).splice(i,1);showTxt='';save();render()}
