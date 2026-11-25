@@ -30,6 +30,7 @@ No hay paso de compilación: lo que está en el repositorio es lo que se publica
 | `js/01-base.js` … `js/14-inicio.js` | Toda la lógica, dividida por temas y numerada **en orden de carga** (ver tabla de abajo). Primera línea de cada archivo: qué contiene. |
 | `sw.js` | Service worker: caché primero, precarga los archivos de `FILES` y activa la nueva versión al instante. |
 | `manifest.webmanifest`, `icon-*.png` | Instalación como PWA. |
+| `googlee66ed85ab908e76c.html` | Verificación de propiedad de la página en Google Search Console (la pide la verificación de marca de Google). **No borrar ni cambiar.** |
 | `jspdf.umd.min.js` | jsPDF 4.2.1 en local (PDFs sin internet). |
 | `tests/`, `package.json` | Pruebas automáticas (ver abajo). `node_modules/` no se sube. |
 
