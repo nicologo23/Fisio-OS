@@ -102,7 +102,7 @@ const Sync=(()=>{
     else if(a=='sycuse'){const r=Datos.usarConflicto(st,b.dataset.id);if(r.ok){save();render();flash('Versión restaurada. La que había antes queda guardada aquí por si quieres volver a ella.')}else flash(r.msg)}
     else if(a=='sycdel'){const id=b.dataset.id;if(delArm!='x'+id){delArm='x'+id;render();return}Datos.descartarConflicto(st,id);delArm=null;save();render();flash('Conflicto descartado')}}
 
-  const TIPOS={client:'Deportista',plan:'Plan',week:'Semana',case:'Lesión',entry:'Anotación',routine:'Rutina',group:'Grupo',exercise:'Ejercicio propio',override:'Ajuste de ejercicio',ajuste:'Ajustes'};
+  const TIPOS={client:'Paciente',plan:'Plan',week:'Semana',case:'Lesión',entry:'Anotación',routine:'Rutina',group:'Grupo',exercise:'Ejercicio propio',override:'Ajuste de ejercicio',ajuste:'Ajustes'};
   function nombreDe(c){const d=c.data||{};return d.name||d.text||d.dx||(c.kind=='ajuste'&&c.rid=='semana'?'Tablero semanal':'')||''}
   function tarjeta(){
     const ok=prov&&prov.configurado(),on=activo(),con=on&&prov.conectado();

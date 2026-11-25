@@ -43,7 +43,7 @@ Además: no se añaden funciones de seguridad avanzadas ni dependencias que no h
 - **Un archivo por dispositivo.** Cada dispositivo escribe solo `fisio-os--<idDispositivo>.json` (una copia completa de sus registros) y lee los de los demás. Dos dispositivos nunca escriben el mismo archivo, así que Drive no puede pisar nada.
 - **Proveedor sustituible.** `Sync` solo usa: `configurado, conectado, preparar, conectar, desconectar, invalidar, listar, leer, escribir`. Para cambiar de Google Drive a otro servicio se escribe otro proveedor con esa interfaz; no se toca `Sync` ni `Datos`.
 - **Formato del archivo:** `{formato:'fisio-os-sync', esquema:2, dispositivo, generado, registros:[{k,id,kind,parent,ord,data,updatedAt,deletedAt,vv}]}`. Los registros son las mismas filas que guarda IndexedDB (salvo la marca local `pend`).
-- **Qué NO se sincroniza:** selecciones de este dispositivo (deportista abierto, rutina activa…), preferencias visuales, el ID de cliente de Google y el permiso temporal.
+- **Qué NO se sincroniza:** selecciones de este dispositivo (paciente abierto, rutina activa…), preferencias visuales, el ID de cliente de Google y el permiso temporal.
 
 ## 3. Sincronización, versiones y conflictos
 
@@ -98,7 +98,7 @@ Se revisaron las condiciones de los servicios de las API de Google, la política
 ## 7. Riesgos y límites conocidos
 
 1. **Importar una copia sustituye todo, a propósito** (decisión del usuario) y con la sincronización activada **esa sustitución se replica**: lo que falte en la copia queda borrado en todos los dispositivos. Por eso exportar e importar avisan antes de continuar y la copia exportada incluye todos los datos.
-2. **Hijo huérfano:** si en un dispositivo se borra un deportista o una lesión y en otro se añade una anotación a ese mismo elemento, la anotación queda guardada pero oculta (el padre está borrado).
+2. **Hijo huérfano:** si en un dispositivo se borra un paciente o una lesión y en otro se añade una anotación a ese mismo elemento, la anotación queda guardada pero oculta (el padre está borrado).
 3. **Caducidad del almacenamiento en iOS:** Safari puede borrar los datos de un sitio si no se usa en 7 días; en una app instalada el riesgo es menor pero no está descartado. Con la sincronización activa, Drive guarda una copia completa (restauración en un dispositivo nuevo).
 4. **Navegador y app instalada tienen datos separados** (en iOS son almacenes distintos): cada uno cuenta como un dispositivo propio y hay que conectarlo por separado.
 5. **El permiso dura ~1 hora** (apartado 4).

@@ -5,7 +5,7 @@ async function buildPDF(sp){const J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw
 const doc=new J({unit:'mm',format:'a4',compress:true}),W=210,M=14,CW=W-2*M,AC=[15,118,110],T=pdfText;let y=M;
 const need=h=>{if(y+h>284){doc.addPage();y=M}},txt=(x,px,py,sz,st,col,op)=>{doc.setFont('helvetica',st||'normal');doc.setFontSize(sz);doc.setTextColor(...(col||[30,30,30]));doc.text(T(x),px,py,op)},wrap=(x,wd,sz,st)=>{doc.setFont('helvetica',st||'normal');doc.setFontSize(sz);return doc.splitTextToSize(T(x),wd)};
 const sets=its=>its.reduce((a,it)=>a+(+it.sets||0),0);
-txt(sp.title,M,y+6,18,'bold',AC);y+=12;txt(sp.sub||'',M,y,10,'normal',[90,90,90]);y+=5;txt('Deportista: '+sp.athlete,M,y,10,'bold');y+=6;
+txt(sp.title,M,y+6,18,'bold',AC);y+=12;txt(sp.sub||'',M,y,10,'normal',[90,90,90]);y+=5;txt('Paciente: '+sp.athlete,M,y,10,'bold');y+=6;
 if(sp.note){wrap('Notas: '+sp.note,CW,9).forEach(l=>{txt(l,M,y,9,'italic',[70,70,70]);y+=4});y+=1}
 doc.setDrawColor(...AC);doc.setLineWidth(.6);doc.line(M,y,W-M,y);y+=5;
 if(sp.week){txt('Resumen semanal',M,y+4,11,'bold');y+=8;sp.week.forEach(d=>{txt(d.day+':',M,y,10,'bold');txt(d.name?`${d.name}  (${d.n} ejercicios, ${d.sets} series)`:'Descanso',M+28,y,10,'normal',d.name?[30,30,30]:[130,130,130]);y+=6})}
@@ -38,7 +38,7 @@ async function buildGroupPDF(R){const J=window.jspdf&&window.jspdf.jsPDF;if(!J)t
 const doc=new J({unit:'mm',format:'a4',compress:true}),W=210,M=14,AC=[15,118,110],T=pdfText;let y=M;
 const need=h=>{if(y+h>284){doc.addPage();y=M}},txt=(x,px,py,sz,st_,col,op)=>{doc.setFont('helvetica',st_||'normal');doc.setFontSize(sz);doc.setTextColor(...(col||[30,30,30]));doc.text(T(x),px,py,op)};
 const H2=t=>{need(16);y+=3;txt(t,M,y+5,12,'bold',AC);y+=9},bars=rows=>{const mx=Math.max(1,...rows.map(r=>r[1]));if(!rows.length){txt('Sin datos en el período.',M,y+3,9,'normal',[130,130,130]);y+=6;return}rows.forEach(([k,v,sub])=>{need(6);const w=Math.max(.8,v/mx*80);txt(k,M,y+3.4,9);doc.setFillColor(...AC);doc.rect(M+58,y+.8,w,3.2,'F');txt(String(v)+(sub?'  ('+sub+')':''),M+58+w+2,y+3.4,9,'normal',[60,60,60]);y+=5.6})};
-txt('Informe de lesiones del grupo',M,y+6,18,'bold',AC);y+=12;txt(R.g.name,M,y,13,'bold');y+=6;txt(`Período: ${fmtD(R.from)} - ${fmtD(R.to)} · ${R.mem.length} deportistas · generado el ${fmtD(today())}`,M,y,9.5,'normal',[90,90,90]);y+=4;
+txt('Informe de lesiones del grupo',M,y+6,18,'bold',AC);y+=12;txt(R.g.name,M,y,13,'bold');y+=6;txt(`Período: ${fmtD(R.from)} - ${fmtD(R.to)} · ${R.mem.length} pacientes · generado el ${fmtD(today())}`,M,y,9.5,'normal',[90,90,90]);y+=4;
 doc.setDrawColor(...AC);doc.setLineWidth(.6);doc.line(M,y,W-M,y);y+=6;
 grpSent(R).forEach(l=>{need(6);txt('- '+l,M,y,10);y+=5.6});
 y+=1;txt('Severidad según días en tratamiento, calculada al dar el alta: leve 0 días, mínima 1-3, ligera 4-7, moderada 8-28, severa más de 28.',M,y+2,8,'italic',[110,110,110]);y+=6;
@@ -48,7 +48,7 @@ ims.forEach((im,i)=>{doc.addImage(im,'PNG',M+i*40,y,38,76);txt(i?'Espalda':'Fren
 let zy=y+3;regRows(R).forEach(([k,n,sub])=>{txt(`${k}: ${n}${sub?'  ('+sub+')':''}`,M+86,zy,9.5);zy+=5.4});if(R.nozone)txt(`${R.nozone} lesiones sin zona marcada`,M+86,zy,8.5,'italic',[110,110,110]);if(!R.rlist.length)txt('Sin zonas marcadas.',M+86,zy,9.5,'normal',[130,130,130]);y+=84;
 H2('Tiempo hasta el alta');if(R.days){txt(`Media ${r1c(R.days.avg)} días · mediana ${r1c(R.days.med)} · máximo ${R.days.max} (${R.days.n} lesiones con alta)`,M,y+3,10);y+=7;bars(R.dtype.map(([k,n,a])=>[k,Math.round(a*10)/10,n+(n>1?' altas':' alta')]))}else{txt('Aún no hay lesiones con alta en el período.',M,y+3,9.5,'normal',[130,130,130]);y+=6}
 H2('Recaídas');if(R.rel.length)R.rel.forEach(r=>{need(11);txt(`${r.c.name}: ${r.f.name}`,M,y+3,9.5,'bold');y+=5;txt(r.prev?`Recaída de: ${r.prev.name}`:'Lesión anterior no vinculada',M+4,y+3,9,'normal',[90,90,90]);y+=6.5});else{txt('Sin recaídas en el período.',M,y+3,9.5,'normal',[130,130,130]);y+=6}
-H2('Por deportista');const cx=[M,M+68,M+88,M+108,M+128,M+150];need(8);['Deportista','Lesiones','En curso','Severas','Recaídas','Días medios hasta alta'].forEach((h,i)=>txt(h,cx[i],y+3,8.5,'bold',[90,90,90]));y+=5.5;
+H2('Por paciente');const cx=[M,M+68,M+88,M+108,M+128,M+150];need(8);['Paciente','Lesiones','En curso','Severas','Recaídas','Días medios hasta alta'].forEach((h,i)=>txt(h,cx[i],y+3,8.5,'bold',[90,90,90]));y+=5.5;
 R.per.forEach(r=>{need(6);[r.name,r.n,r.act,r.sv,r.rel,r.avg==null?'-':r1c(r.avg)].forEach((v,i)=>txt(String(v),cx[i],y+3,9.5));doc.setDrawColor(230);doc.setLineWidth(.2);doc.line(M,y+4.6,W-M,y+4.6);y+=6});if(!R.per.length){txt('Sin lesiones en el período.',M,y+3,9.5,'normal',[130,130,130]);y+=6}
 H2('Lesiones en curso');if(R.active.length)R.active.forEach(l=>{need(6);txt(`${l.c.name}: ${l.f.name}  (${l.s.days} días en tratamiento)`,M,y+3,9.5);y+=5.6});else{txt('No hay lesiones en curso en el período.',M,y+3,9.5,'normal',[130,130,130]);y+=6}
 const N=doc.getNumberOfPages();for(let i=1;i<=N;i++){doc.setPage(i);txt('Informe de grupo · '+R.g.name,M,291,8,'normal',[130,130,130]);txt('Página '+i+' de '+N,W-M,291,8,'normal',[130,130,130],{align:'right'})}

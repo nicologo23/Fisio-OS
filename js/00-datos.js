@@ -4,7 +4,7 @@
 const uid=(()=>{let n=0;return p=>p+Date.now().toString(36)+(n++).toString(36)+Math.random().toString(36).slice(2,6)})();
 const Datos=(()=>{
   const DB='fisio-os',VER=1,ESQUEMA=2;   // esquema 2: cada registro lleva vv (versión por dispositivo) y pend (pendiente de subir)
-  // Selecciones de ESTE dispositivo (deportista abierto, rutina activa…): se guardan pero no se sincronizarán.
+  // Selecciones de ESTE dispositivo (paciente abierto, rutina activa…): se guardan pero no se sincronizarán.
   const LOCALES=['active','gsel','cc','fcase'];
   const CONOCIDAS=['custom','routines','week','ov','groups','clients','conflicts'].concat(LOCALES);
   let db=null,idx=new Map(),timer=null,cola=Promise.resolve(),fuente=null,selPrev=null,deviceId=null,ult=0,visto=0,porEscribir=new Map();

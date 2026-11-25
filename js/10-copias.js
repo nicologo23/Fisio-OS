@@ -1,6 +1,6 @@
 // Copias de seguridad y pantalla Datos
 // Avisos antes de exportar e importar (decisión del usuario, 25/11/2026: importar SUSTITUYE todo; exportar incluye TODO).
-const CONF_EXP='Se va a crear una copia con TODOS tus datos (deportistas, lesiones, rutinas, ejercicios propios y ajustes). Guárdala en un lugar seguro. ¿Continuar?';
+const CONF_EXP='Se va a crear una copia con TODOS tus datos (pacientes, lesiones, rutinas, ejercicios propios y ajustes). Guárdala en un lugar seguro. ¿Continuar?';
 const CONF_IMP='Importar SUSTITUYE todos los datos de este dispositivo por los de la copia: lo que no esté en la copia se borra. Si tienes la sincronización activada, el cambio también llegará a tus otros dispositivos. ¿Seguro que quieres continuar?';
 const bkTouch=()=>{try{localStorage.setItem('plan_bk',today())}catch(e){}};
 const bkAge=()=>{try{const k=localStorage.getItem('plan_bk');return k?Math.round((pd(today())-pd(k))/864e5):null}catch(e){return null}};

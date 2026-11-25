@@ -103,3 +103,8 @@ details.card>summary{font-weight:600;min-height:36px}
 .syncb{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--mut,#8e8e93);margin:0 0 8px}
 .syncb[hidden]{display:none}
 .syncb.aten{font-size:14px;color:inherit;background:var(--card);border:1px solid var(--ac);border-radius:12px;padding:10px}
+.grip{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.card.item.mov{transition:transform .15s}
+.card.item.arrastrando{position:relative;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.28);transition:none}
+body.arrastrando-ya{user-select:none;-webkit-user-select:none;cursor:grabbing}
+.ih{flex-wrap:wrap}.ih .in{flex:1 1 170px}.ib{margin-left:auto}

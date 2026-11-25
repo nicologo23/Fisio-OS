@@ -25,9 +25,9 @@ H.run(({ w, d, clk, tab, app, S, T, K, errs, html }) => {
   T('zonas pintadas (2 de la demo)', d.querySelectorAll('.bz.on').length == 2);
   clk('[data-a=fz][data-z=rodilla-D]'); T('marcar zona', d.querySelectorAll('.bz.on').length == 3);
   clk('[data-a=fzclr]'); T('quitar zonas', d.querySelectorAll('.bz.on').length == 0);
-  // Grupos, deportistas, biblioteca
+  // Grupos, pacientes, biblioteca
   tab('grp'); T('grupos: resumen', /Resumen/.test(app()));
-  tab('cli'); T('deportistas: lista', /Ana García/.test(app()));
+  tab('cli'); T('pacientes: lista', /Ana García/.test(app()));
   tab('lib'); T('biblioteca: ejercicios listados', d.querySelectorAll('.ex').length > 5);
   T('biblioteca: dibujos animados', d.querySelectorAll('.fig').length > 0);
   T('sin errores finales', errs.length == 0);

@@ -81,7 +81,7 @@ function crearNube() {
   T('B: sin errores de JavaScript', B.errs.length == 0);
   T('B: nada pendiente tras recuperar (salvo lo que sube de su archivo)', pend(B) == 0);
   T('B: tiene su propio archivo', nube.files.size == 2);
-  T('B: la pantalla se repintó con los deportistas', (B.tab('hoy'), B.d.body.textContent.length > 0));
+  T('B: la pantalla se repintó con los pacientes', (B.tab('hoy'), B.d.body.textContent.length > 0));
   const lec0 = nube.lecturas; await sync(B);
   T('B: no vuelve a descargar un archivo que no ha cambiado', nube.lecturas == lec0);
 

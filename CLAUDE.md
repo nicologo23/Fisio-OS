@@ -40,7 +40,7 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 | `01-base.js` | Constantes, estado `st` (vacío al cargar el script), `save()` (→ `Datos.programar`), `all()/byId()`, utilidades (`$`, `esc`, `flash`), `APPV` |
 | `02-dibujos.js` | Figuras de palitos: posturas `PO/PF`, reglas `AR/SR/FIX`, `frame`, `pic` |
 | `03-biblioteca.js` | Filtros, editor de ejercicio, `lib()`, `list()`, tarjeta `card` |
-| `04-planificacion.js` | Deportistas (`cli`), rutinas (`rut`), semana (`sem`), `addToR` |
+| `04-planificacion.js` | Pacientes (`cli`), rutinas (`rut`, con asa para arrastrar ejercicios), semana (`sem`), `addToR` |
 | `05-fisioterapia.js` | Lesiones (`fis`, `fdet`), mapa corporal (`ZN`, `bodyChart`), severidad (`sev`), recaídas, resumen |
 | `06-pdf.js` | `buildPDF`, `buildGroupPDF`, `pdfSave` y compartir/descargar |
 | `07-grupos.js` | `grpReport` (cálculo), `grpView`, `grp()` |
@@ -74,7 +74,7 @@ st = { custom:[], routines:[{id,name,items:[{e,sets,reps,hold,rest,load,note}]}]
                   cases:[{ id,name,status:'Activa'|'Alta',opened,closed,dx,type,act,contact,moment,zones:[zoneId],
                            entries:[{id,n,date,type,text,pain,meas:[{k,l,s,v,u}]}] }] }] }
 ```
-Las lesiones (`cases`) cuelgan del deportista; los grupos solo guardan ids de deportistas. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
+En la pantalla se les llama **Pacientes** (decisión del usuario, 25/11/2026; en el código siguen siendo `clients`/`cli`). Las lesiones (`cases`) cuelgan del paciente; los grupos solo guardan ids de pacientes. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
 
 ## Almacenamiento y sincronización
 Documento completo (arquitectura, decisiones, condiciones de Google, limitaciones): **`docs/sincronizacion.md`**. Guía de pruebas a mano: **`docs/guia-pruebas-manuales.md`**. Resumen:
@@ -100,7 +100,7 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - El botón "Cambiar tema" escribe `data-theme`, que ningún CSS lee: no hace nada (regresión del rediseño).
 - `today()` usa `toISOString()` (UTC): cerca de medianoche puede dar el día anterior/siguiente.
 - Editar una anotación clínica solo permite cambiar texto y fecha; añadir una exige texto o medida.
-- Borrar una rutina deja su id huérfano en `st.week`; borrar un deportista lo deja en `members` de los grupos (el informe lo ignora).
+- Borrar una rutina deja su id huérfano en `st.week`; borrar un paciente lo deja en `members` de los grupos (el informe lo ignora).
 - Todo comparte el ámbito global (nombres de variables y funciones): al añadir algo, comprobar que el nombre no existe ya (`grep`). Cambios pequeños y probados.
 
 ## Pruebas
