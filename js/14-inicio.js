@@ -2,7 +2,7 @@
 applyUI();
 $('#app').innerHTML='<div class="card empty"><b>Cargando…</b></div>';
 Datos.alError=(m,e)=>{avisoGuardado(m,'guardado');if(e)console.error(e)};Datos.alOk=()=>quitarAviso('guardado');Datos.alAviso=(m,e)=>{avisoGuardado(m,'carga');if(e)console.error(e)};
-Datos.iniciar().then(r=>{Object.assign(st,r.st);fixCases();save();render();
+Datos.iniciar().then(r=>{Object.assign(st,r.st);fixCases();save();render();Sync.iniciar();
   if(r.danados)avisoGuardado(r.danados+' registro(s) guardado(s) están dañados y no se han cargado.','carga')})
 .catch(e=>{avisoGuardado((e&&e.message)||'No se han podido cargar los datos de este dispositivo.','carga');render()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='hidden')Datos.vaciar()});

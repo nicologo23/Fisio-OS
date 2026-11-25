@@ -6,18 +6,18 @@ Basado en la auditoría técnica del 24/11/2026. Si algo de aquí contradice el 
 ## Qué es
 - App web original (inspirada en Harbiz, no una copia) para **planificar entrenamientos** y **seguir tratamientos de fisioterapia** de deportistas.
 - Usuario: un único fisioterapeuta/preparador que trabaja solo, en **iPhone y iPad** (Safari, instalada como PWA). Interfaz y textos en **español**; los nombres de ejercicios pueden quedar en inglés.
-- Sin servidor, sin cuentas, sin sincronización entre dispositivos. Los datos viven **en el navegador de cada dispositivo** (IndexedDB, base de datos `fisio-os`). La sincronización entre dispositivos está **planificada, no implementada** (ver "Almacenamiento y sincronización").
+- Sin servidor propio. Los datos viven **en el navegador de cada dispositivo** (IndexedDB, base de datos `fisio-os`) y, si el usuario lo activa, se sincronizan entre dispositivos a través de la carpeta oculta de **su** Google Drive (ver "Almacenamiento y sincronización" y `docs/sincronizacion.md`). La app funciona igual sin conexión y sin Google.
 
-## Fase actual: desarrollo, sin datos reales
-- Decisión del usuario (25/11/2026): la app **no tiene datos reales** y seguirá así hasta tener el producto final, para no estar exportando/importando en cada cambio. No hace falta pedirle copias de seguridad al publicar mientras siga en esta fase.
-- Por eso ahora es el momento más barato de cambiar el modelo de datos o el almacenamiento (no hay nada que migrar). **Antes del lanzamiento** hay que decidir dónde se guardan los datos reales (ver "Almacenamiento y sincronización") y, a partir de que existan datos reales, aplica la regla nº 1 al pie de la letra.
-- Hablar de datos reales (dónde guardarlos, copias, privacidad) está **pendiente**: el usuario lo retomará cuando toque.
+## Alcance: uso personal, un solo usuario, datos ficticios (decisión del usuario, 25/11/2026)
+- Fisio-OS es de **uso exclusivamente personal y de un único usuario**. Se usan **siempre datos ficticios** (apodos inventados), nunca datos clínicos ni personales de pacientes reales. Por tanto **no** se desarrolla documentación de protección de datos de pacientes (RGPD), ni cifrado propio extra, ni cuentas profesionales: se usa la cuenta gratuita de Google del usuario y el cifrado de Google + HTTPS. La política de privacidad se queda en el mínimo que exige Google (`privacidad.html`).
+- **Si algún día se quisieran usar datos reales de pacientes, hay que parar y volver a decidir** (RGPD de datos de salud, contratos con Google, cifrado, acuerdos de tratamiento, copia de seguridad). Está resumido en `docs/sincronizacion.md`, apartado "Si algún día hubiera datos reales".
+- Como los datos son ficticios, cambiar el modelo de datos es barato, pero **ahora hay sincronización**: cualquier cambio de la forma de los registros necesita migración probada en todos los dispositivos (ver regla nº 1).
 
-## Regla nº 1: los datos del usuario son lo más valioso (obligatoria en cuanto haya datos reales)
+## Regla nº 1: los datos del usuario son lo más valioso (obligatoria; con la sincronización también cuenta aunque sean ficticios)
 - Nunca cambiar la forma de `st`, los registros de IndexedDB (`js/00-datos.js`) ni las claves de localStorage (`plan_ui`, `plan_bk`, `plan_v1` antigua) sin una migración que conserve los datos existentes y sin probarla.
 - Cualquier cambio que borre, sobrescriba o importe datos debe pedir confirmación al usuario y ser reversible o ir precedido de una copia.
 - **Este repositorio es público.** No subir nunca datos reales de deportistas o pacientes, ni copias de seguridad (`Planificador_copia_*.json`). Las pruebas usan datos ficticios (`tests/demo.js`).
-- No añadir claves API, credenciales ni servicios externos sin hablarlo antes. Hoy no hay ninguno.
+- No añadir claves API, credenciales ni servicios externos sin hablarlo antes. El único servicio externo es Google (inicio de sesión + carpeta oculta de Drive del propio usuario), sin ninguna clave ni ID en el código.
 
 ## Archivos del repositorio (raíz = lo que se publica en GitHub Pages)
 No hay paso de compilación: lo que está en el repositorio es lo que se publica y lo que se edita.
@@ -27,13 +27,13 @@ No hay paso de compilación: lo que está en el repositorio es lo que se publica
 | `css/app.css` | Todos los estilos (3 estilos visuales, claro/oscuro, iPhone/iPad/ordenador). |
 | `datos/ejercicios.js` | Biblioteca `LIB`: 909 ejercicios en una sola línea (~680 KB). **No abrir entero**: leerlo por trozos o con búsquedas. Cambia rara vez. |
 | `js/00-datos.js` | **Capa de datos**: `Datos` (IndexedDB, registros sincronizables) y `uid()`. Ver abajo. |
-| `js/01-base.js` … `js/12-inicio.js` | Toda la lógica, dividida por temas y numerada **en orden de carga** (ver tabla de abajo). Primera línea de cada archivo: qué contiene. |
+| `js/01-base.js` … `js/14-inicio.js` | Toda la lógica, dividida por temas y numerada **en orden de carga** (ver tabla de abajo). Primera línea de cada archivo: qué contiene. |
 | `sw.js` | Service worker: caché primero, precarga los archivos de `FILES` y activa la nueva versión al instante. |
 | `manifest.webmanifest`, `icon-*.png` | Instalación como PWA. |
 | `jspdf.umd.min.js` | jsPDF 4.2.1 en local (PDFs sin internet). |
 | `tests/`, `package.json` | Pruebas automáticas (ver abajo). `node_modules/` no se sube. |
 
-Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, así que una función de un archivo se puede usar desde otro): `jspdf` → `datos/ejercicios.js` → `js/00…12`. El orden está en `index.html` y la precarga en `sw.js`.
+Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, así que una función de un archivo se puede usar desde otro): `jspdf` → `datos/ejercicios.js` → `js/00…14`. El orden está en `index.html` y la precarga en `sw.js`.
 
 | Archivo | Contenido |
 |---|---|
@@ -48,9 +48,11 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 | `09-hoy.js` | Pantalla Hoy |
 | `10-copias.js` | Copias de seguridad, aviso de 14 días, pantalla Datos |
 | `11-eventos.js` | `V`, `render()`, listeners `click/input/change` (acciones `data-a`) |
-| `12-inicio.js` | Arranque **asíncrono**: `Datos.iniciar()` → `Object.assign(st,…)` → `fixCases()` → `render()`; vaciado al ocultar la página; service worker |
+| `12-sync.js` | **Motor de sincronización** (`Sync`, no depende de Google): ciclo bajar → mezclar → subir, estado, barra `#syncb`, tarjeta de la pestaña Datos, acciones `data-a="sy…"` |
+| `13-drive.js` | **Proveedor Google Drive** (`Drive`): inicio de sesión (Google Identity Services) y archivos en `appDataFolder`. Para cambiar de proveedor solo hay que escribir otro con la misma interfaz (ver `docs/sincronizacion.md`) |
+| `14-inicio.js` | Arranque **asíncrono**: `Datos.iniciar()` → `Object.assign(st,…)` → `fixCases()` → `render()` → `Sync.iniciar()`; vaciado al ocultar la página; service worker |
 
-**Al añadir un archivo JS**: añadirlo a `index.html` (en su sitio del orden) y a `FILES` de `sw.js`. Las sentencias que se ejecutan al cargar (p. ej. `fixCases()`, `ZN.forEach`, `Object.assign(PO,…)`) dependen del orden; las funciones y constantes que solo se usan dentro de funciones pueden estar en cualquier archivo anterior a `12-inicio.js`.
+**Al añadir un archivo JS**: añadirlo a `index.html` (en su sitio del orden) y a `FILES` de `sw.js`. Las sentencias que se ejecutan al cargar (p. ej. `fixCases()`, `ZN.forEach`, `Object.assign(PO,…)`) dependen del orden; las funciones y constantes que solo se usan dentro de funciones pueden estar en cualquier archivo anterior a `14-inicio.js`.
 
 ## Arquitectura (resumen; buscar por nombre, los números de línea cambian)
 - JavaScript sin framework, sin módulos ni compilación (`js/*.js`). Vistas = funciones que devuelven HTML en plantillas y se pintan con `innerHTML`.
@@ -75,26 +77,26 @@ st = { custom:[], routines:[{id,name,items:[{e,sets,reps,hold,rest,load,note}]}]
 Las lesiones (`cases`) cuelgan del deportista; los grupos solo guardan ids de deportistas. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
 
 ## Almacenamiento y sincronización
-**Decisiones del usuario (25/11/2026):** quiere los mismos datos en iPhone, iPad y ordenador (Windows con Opera); cada dispositivo guarda una **copia completa** local (funciona sin internet) y un sitio en la nube hace de punto de encuentro; solo texto y datos (sin fotos ni vídeos por ahora); usa apodos, no nombres reales. Quiere un servicio **gratuito** con inicio de sesión, de modo que los datos de cada persona queden en su propia cuenta (si otros usan la app desde la dirección del repositorio, entran con sus credenciales). **Ruta elegida el 25/11/2026: opción A = Google Drive, carpeta oculta `appDataFolder` de cada usuario (permiso `drive.appdata`), con inicio de sesión de Google.** Alternativas descartadas por ahora: Firebase (Spark) y Supabase (el gratuito se pausa; el correo integrado es muy limitado). Sin servidor propio no se guardan datos de nadie. **Riesgo por comprobar:** el inicio de sesión de Google dentro de la app instalada en iPhone/iPad (ventanas emergentes en modo "pantalla de inicio") y la caducidad del permiso (~1 h, se renueva con un toque del usuario). Si la prueba falla en iOS, reevaluar (Firebase/Supabase).
-
-**Hecho (fase A, local):** `js/00-datos.js`.
-- IndexedDB `fisio-os` v1: almacén `registros` (clave `k = tipo/id`) y `meta` (`deviceId`, `esquema`, `sel`).
-- `st` (anidado) se aplana en registros `{k,id,kind,parent,ord,data,updatedAt,deletedAt}`. Tipos: `client, plan, week, case, entry, routine, group, exercise, override, ajuste` (`ajuste/semana` = tablero semanal `st.week`; `ajuste/resto` = campos sueltos desconocidos). `parent` = id del padre (cliente para plan/week/case, lesión para entry); `ord` = posición en su lista.
-- Borrar = **lápida** (`deletedAt` + `data:null`), no se elimina el registro: así el borrado se podrá sincronizar.
-- Selecciones de este dispositivo (`active, gsel, cc, fcase`) van en `meta.sel` y **no** se sincronizarán. Preferencias visuales (`plan_ui`) y fecha de copia (`plan_bk`) siguen en localStorage (por dispositivo).
-- Nunca se borran solos los registros que no se pudieron cargar (dañados u huérfanos): quedan `retenido`.
-- `uid(prefijo)` genera ids únicos entre dispositivos (úsalo siempre; nunca `Date.now()` solo).
-- Migración: al primer arranque, si IndexedDB está vacía y hay `plan_v1` en localStorage, se importa y se marca `plan_v1_migrado`; la copia antigua **no se borra**.
-- `Datos.registros(desde)` devuelve los registros (con lápidas) modificados después de `desde`: es la base de la sincronización.
-
-**En curso (fase B0, prueba de viabilidad):** `prueba-drive.html` (raíz) es una página **aparte y temporal** que prueba inicio de sesión de Google (ventana emergente y redirección) y guardar/leer un archivo en `appDataFolder`; no toca la app ni los datos. `sw.js` la deja pasar sin caché (rutas que contienen `/prueba-`). El ID de cliente de Google no es un secreto (se puede subir al repositorio), pero nunca subir tokens ni secretos de cliente. Cuando la prueba haya servido, borrar `prueba-drive.html` y la excepción de `sw.js`.
-
-**Pendiente (fase B, sincronización):** elegir el formato en Drive (cada dispositivo escribe su propio archivo y los demás lo fusionan por registro, o un archivo único; Drive guarda archivos, no es una base de datos); registros con las mismas columnas; subir los cambios locales (`updatedAt > último envío`), bajar los remotos y aplicarlos (el más reciente gana, por registro); descarga completa al abrir en un dispositivo nuevo; limpiar lápidas antiguas ya sincronizadas; relojes: usa la hora del dispositivo, vigilar desajustes; instalar la app en el ordenador (Opera: comprobar). Ya hay un hueco para ello: no hace falta tocar el resto de la app. Antes del lanzamiento: RGPD (datos de salud aunque sean apodos), copia de seguridad en la nube, y decidir qué pasa si falla el servicio (la app debe seguir funcionando en local).
+Documento completo (arquitectura, decisiones, condiciones de Google, limitaciones): **`docs/sincronizacion.md`**. Guía de pruebas a mano: **`docs/guia-pruebas-manuales.md`**. Resumen:
+- **Local:** IndexedDB `fisio-os` (`js/00-datos.js`), copia completa en cada dispositivo. Es la fuente de verdad que usa la app; funciona sin internet.
+- **Nube:** Google Drive, carpeta oculta `appDataFolder` (único permiso: `drive.appdata`). Cada dispositivo escribe **solo su propio archivo** `fisio-os--<idDispositivo>.json` (copia completa suya) y lee los de los demás. Nunca dos dispositivos escriben el mismo archivo.
+- **Cuándo sincroniza:** al abrir la app, tras cada cambio (con 2,5 s de espera), al volver la conexión y al volver a primer plano; y a mano con «Sincronizar ahora». iOS no permite sincronizar en segundo plano: solo con la app abierta.
+- **Registros** `{k,id,kind,parent,ord,data,updatedAt,deletedAt,vv,pend}`; tipos `client, plan, week, case, entry, routine, group, exercise, override, ajuste, conflicto`. `st.conflicts` guarda las versiones perdedoras de los conflictos. `pend` es local (no viaja a la nube).
+- **Versiones (`vv`):** mapa `{idDispositivo: contador}` por registro; cada cambio local suma 1 al contador del dispositivo. Una versión *domina* a otra si es posterior; si ninguna domina, son **concurrentes** (conflicto real). Dominada → se toma la que domina. Concurrentes → gana la de `updatedAt` mayor (empate: contenido mayor, igual en todos los dispositivos), la perdedora se guarda como `conflicto` visible y restaurable en Datos, y el resultado es **idéntico en todos los dispositivos** (vv unida sin sumar), por eso no hay discusiones infinitas. Editado vs borrado concurrentes: se conserva lo editado.
+- **`updatedAt`** = `max(Date.now(), mayor visto + 1)`: un reloj atrasado no hace que sus cambios parezcan antiguos.
+- **Mezcla síncrona:** `Datos.fusionar(st, remotos)` lee, mezcla y reemplaza `st` en el mismo instante (sin `await` en medio), así ninguna edición de pantalla se pierde. La pantalla no se repinta mientras se escribe en un campo.
+- **Borrar = lápida** (`deletedAt`, `data:null`). Las lápidas **no se purgan** en esta versión (uso personal: pocas). Registros dañados u huérfanos: `retenido`, nunca se borran solos.
+- **Selecciones de este dispositivo** (`active, gsel, cc, fcase`) van en `meta.sel` y no se sincronizan. `plan_ui`, `plan_bk`, `plan_cid` (ID de cliente de Google), `plan_tok` (permiso temporal), `plan_sync_on`, `plan_sync_ult` están en localStorage y son por dispositivo.
+- **Esquema 2** (migración 1→2 automática al abrir: da versión y marca como pendiente todo lo existente). `uid(prefijo)` sigue siendo obligatorio para ids nuevos.
+- **Interfaz del proveedor** (lo único que el motor usa): `configurado()`, `conectado()`, `preparar()`, `conectar()` (desde un toque), `desconectar()`, `invalidar()`, `listar()→[{id,nombre,version}]`, `leer(id)`, `escribir(nombre,id,doc)`. Los errores llevan `codigo` (`red`, `auth`, `cancelado`…) y `mensaje` en español.
+- **ID de cliente de Google:** NO está en el código (el repositorio es público y las condiciones de Google desaconsejan incrustar credenciales en proyectos de código abierto). Se pega en Datos y se queda en `localStorage` (`plan_cid`) de cada dispositivo. Nunca subir tokens ni secretos de cliente. La app de Google sigue en **modo Testing** (hasta 100 usuarios de prueba; el permiso se vuelve a pedir cada 7 días). **No pasar a producción** hasta que el usuario y Claude hayan comprobado juntos sincronización, uso sin conexión y recuperación de datos (guía de pruebas manuales).
+- **Pruebas en dispositivos reales pendientes** (no se pueden automatizar): renovación del permiso (~1 h) en iPhone/iPad/Opera, comportamiento tras 7 días en modo Testing, iPad, cierre de ventana de Google en modo app, Opera instalada como app. `prueba-drive.html` (página aparte, no toca datos) se mantiene mientras se hacen esas pruebas; cuando no haga falta, borrarla junto con la excepción `/prueba-` de `sw.js`.
+- **Riesgos conocidos:** (1) las condiciones de la API de Drive prohíben copias de seguridad de contenido de la app sin consentimiento y no definen el límite; la app sincroniza datos propios del usuario con su consentimiento explícito en su propia cuenta, pero conviene revisarlo si algún día se publica; (2) importar una copia sustituye todo y, con la sincronización, **esa sustitución se replica a los demás dispositivos** (hay que confirmarla: pendiente de decisión del usuario); (3) un hijo creado en un dispositivo cuyo padre se borró en otro queda oculto como huérfano (no se pierde: queda retenido).
 
 ## Problemas conocidos (no arreglar de pasada: pedir confirmación)
 Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - (Resueltos con la capa de datos: fallo de escritura silencioso y sobrescritura de datos corruptos; ahora hay aviso rojo y los registros dañados se conservan.)
-- Importar una copia **sustituye todo sin pedir confirmación**.
+- Importar una copia **sustituye todo sin pedir confirmación** (y con la sincronización activada, la sustitución se replica en los demás dispositivos).
 - El botón "Cambiar tema" escribe `data-theme`, que ningún CSS lee: no hace nada (regresión del rediseño).
 - `today()` usa `toISOString()` (UTC): cerca de medianoche puede dar el día anterior/siguiente.
 - Editar una anotación clínica solo permite cambiar texto y fecha; añadir una exige texto o medida.
@@ -104,7 +106,8 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 ## Pruebas
 - `npm install` (una vez) y `npm test`. Usan jsdom y `fake-indexeddb` con datos ficticios; salen con código distinto de 0 si algo falla.
 - `tests/version.js`: `APPV` == versión de `sw.js`, los archivos precargados y los iconos del manifest existen.
-- `tests/datos.js`: migración desde localStorage, guardar solo lo cambiado, reabrir, lápidas, orden, ids repetidos, registros dañados/huérfanos, fallo de escritura y reintento, dispositivo nuevo (usa `fake-indexeddb`).
+- `tests/datos.js`: migración desde localStorage y del esquema 1 al 2, versiones por registro, guardar solo lo cambiado, reabrir, lápidas, orden, ids repetidos, registros dañados/huérfanos, fallo de escritura y reintento, dispositivo nuevo (usa `fake-indexeddb`).
+- `tests/sync.js`: varios dispositivos simulados contra un Google Drive simulado (proveedor y motor reales): recuperación en dispositivo nuevo, sincronizar al abrir, offline, permiso caducado/reconectar, conflictos (conservar, usar, descartar), resolución independiente idéntica, editar vs borrar, reloj atrasado, archivos extraños, límite 429, desconectar, simulación al azar con 3 dispositivos (`SEMILLA=n npm test` para otra semilla).
 - `tests/smoke.js`: carga sin errores, las 8 pestañas pintan, 3 estilos, mapa corporal, biblioteca, fisio/grupos.
 - `tests/flows.js`: asignar semana, lesión → anotación → resumen → alta → reabrir, 3 PDFs, exportar/importar copia.
 - Los "CONOCIDO" que imprime no fallan la suite; cuando se arregle uno aparecerá como "RESUELTO": actualizar la lista de arriba.
