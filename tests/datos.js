@@ -130,5 +130,28 @@ const abrir = (idb, o) => open(Object.assign({ idb, wait: 500, seed: false }, o 
   const lap6 = (await V6.Datos.registros(0)).filter(r => r.deletedAt);
   T('versión: la lápida lleva versión y está pendiente', lap6.length >= 1 && lap6.every(r => r.vv[d6] == 2 && r.pend == 1 && r.data === null));
   V6.close();
+
+  // 11. Copias manuales: la copia incluye TODO, importar SUSTITUYE todo y ambos avisan antes
+  const idb7 = new IDBFactory(); let K = abrir(idb7, { seed: true }); await K.ready();
+  K.w.eval("st.custom.push({id:uid('c'),g:'x',f:'y',a:[1],c:[],n:'Ejercicio propio ficticio'});st.ov.ex1={iso:true};st.week[2]='r1';st.groups.push({id:uid('g'),name:'Grupo ficticio',members:['k1']});st.conflicts=[{id:'xc1',rk:'client/k1',kind:'client',rid:'k1',parent:null,ord:0,data:{id:'k1',name:'Otra versión'},fecha:5}];save()");
+  await K.flush();
+  K.tab('dat'); K.clk('[data-a=exp]'); const bkTxt = K.d.querySelector('#bk').value;
+  T('exportar: avisa antes y explica que incluye todo', K.w.__confirms.length == 1 && /TODOS tus datos/.test(K.w.__confirms[0]));
+  T('exportar: la copia contiene EXACTAMENTE todos los datos', JSON.stringify(canon(JSON.parse(bkTxt))) == JSON.stringify(canon(K.S())) && JSON.parse(bkTxt).custom.length > 0 && JSON.parse(bkTxt).groups.length > 0 && !!JSON.parse(bkTxt).conflicts.length);
+  K.set('#bk', ''); K.w.__ok = false; K.clk('[data-a=exp]');
+  T('exportar: si se cancela no se genera nada', K.d.querySelector('#bk').value == '');
+  K.w.__ok = true;
+  const pequeno = JSON.stringify({ routines: [], custom: [], clients: [{ id: 'solo1', name: 'Único', notes: '', plans: [], weeks: [], cases: [] }], groups: [], ov: {}, week: {} });
+  K.set('#bk', pequeno); K.w.__ok = false; K.w.__confirms.length = 0; K.clk('[data-a=imp]');
+  T('importar: avisa antes de sustituir', K.w.__confirms.length == 1 && /SUSTITUYE/.test(K.w.__confirms[0]) && /otros dispositivos/.test(K.w.__confirms[0]));
+  T('importar: si se cancela no cambia nada', JSON.stringify(canon(JSON.parse(bkTxt))) == JSON.stringify(canon(K.S())));
+  K.w.__ok = true; K.clk('[data-a=imp]'); await K.flush();
+  T('importar: al aceptar sustituye TODO (lo que no está en la copia desaparece)', K.S().clients.length == 1 && K.S().clients[0].id == 'solo1' && K.S().custom.length == 0 && K.S().groups.length == 0 && K.S().routines.length == 0);
+  K.set('#bk', bkTxt); K.clk('[data-a=imp]'); await K.flush();
+  T('importar la copia completa devuelve todo tal cual', JSON.stringify(canon(JSON.parse(bkTxt))) == JSON.stringify(canon(K.S())));
+  K.close();
+  let K2 = abrir(idb7); await K2.ready();
+  T('importar: lo importado se guarda y sobrevive a cerrar y abrir', JSON.stringify(canon(JSON.parse(bkTxt))) == JSON.stringify(canon(K2.S())));
+  K2.close();
   H0.finish();
 })().catch(e => { console.log('EXCEPCIÓN:', e.stack); process.exit(1); });

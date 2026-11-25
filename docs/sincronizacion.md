@@ -17,7 +17,7 @@ Fisio-OS es de **uso exclusivamente personal, de un solo usuario, con datos fict
 | 7 | Sincronización automática al abrir y tras cambios | Al abrir, 2,5 s después de cada cambio, al volver la conexión y al volver a primer plano |
 | 8 | Funciona sin conexión; envía los cambios al volver | Los cambios quedan marcados como pendientes (`pend`) y se envían cuando se puede |
 | 9 | Restaurar todo desde Drive en un dispositivo nuevo | Un dispositivo vacío descarga y mezcla los archivos de los demás |
-| 10 | Mantener exportar/importar copias a mano | Sin cambios (ver riesgo de importar en el apartado 7) |
+| 10 | Mantener exportar/importar copias a mano | La copia incluye **todos** los datos; **importar sustituye todo** (a propósito); los dos avisan antes de continuar |
 | 11 | Mostrar estado, pendientes y errores | Barra bajo la cabecera (solo si hace falta atención o la sincronización está activa) + tarjeta en Datos |
 | 12 | Sin pérdidas ni sobrescrituras silenciosas | Versiones por registro; la versión perdedora de un conflicto se guarda y se puede restaurar |
 | 13 | Si Google falla o caduca el permiso, la app sigue en local | Todo se lee y se escribe en IndexedDB; Google solo es un extra |
@@ -69,6 +69,8 @@ Además: no se añaden funciones de seguridad avanzadas ni dependencias que no h
 
 ## 4. Sin conexión y permisos
 
+- **No es en tiempo real.** Los cambios se **envían** solos unos 3 segundos después de hacerlos. Se **reciben** al abrir la app, al volver a ella desde otra aplicación, al recuperar la conexión o pulsando «Sincronizar ahora»; no hace falta recargar la página. Una app que queda abierta y quieta en otro dispositivo no se entera hasta que se vuelve a ella (el uso previsto es un dispositivo cada vez).
+
 - **Sin conexión:** se trabaja con normalidad. Los cambios quedan como “pendientes” y se envían al volver la conexión (evento `online`), al volver a abrir o con «Sincronizar ahora». Sobreviven a cerrar la app.
 - **iOS no permite sincronizar en segundo plano** (no hay Background Sync): solo se sincroniza con la app abierta.
 - **Permiso de Google (token):** dura aproximadamente 1 hora y la app no tiene servidor para renovarlo en silencio. Al caducar, la barra muestra «Falta el permiso de Google» con un botón **Reconectar** (hay que pulsarlo: iOS bloquea ventanas que no vienen de un toque). Mientras tanto la app sigue funcionando y acumula pendientes. Si Google concede la renovación sin pedir nada, la ventana se cierra sola. **Pendiente de comprobar en los dispositivos reales.**
@@ -95,7 +97,7 @@ Se revisaron las condiciones de los servicios de las API de Google, la política
 
 ## 7. Riesgos y límites conocidos
 
-1. **Importar una copia sustituye todo** (problema ya conocido) y con la sincronización activada **esa sustitución se replica**: los registros que falten en la copia importada quedan como borrados en todos los dispositivos. Antes de usar «Importar», exportar una copia. Recomendado (pendiente de decisión del usuario): pedir confirmación al importar.
+1. **Importar una copia sustituye todo, a propósito** (decisión del usuario) y con la sincronización activada **esa sustitución se replica**: lo que falte en la copia queda borrado en todos los dispositivos. Por eso exportar e importar avisan antes de continuar y la copia exportada incluye todos los datos.
 2. **Hijo huérfano:** si en un dispositivo se borra un deportista o una lesión y en otro se añade una anotación a ese mismo elemento, la anotación queda guardada pero oculta (el padre está borrado).
 3. **Caducidad del almacenamiento en iOS:** Safari puede borrar los datos de un sitio si no se usa en 7 días; en una app instalada el riesgo es menor pero no está descartado. Con la sincronización activa, Drive guarda una copia completa (restauración en un dispositivo nuevo).
 4. **Navegador y app instalada tienen datos separados** (en iOS son almacenes distintos): cada uno cuenta como un dispositivo propio y hay que conectarlo por separado.

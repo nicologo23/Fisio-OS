@@ -275,6 +275,28 @@ function crearNube() {
   const idbW = new IDBFactory(); const W = disp(idbW); await W.ready(); await sync(W);
   T('azar: un dispositivo nuevo restaura el mismo estado final', norm(W.S()) == norm(X.S()) && W.S().conflicts.length == X.S().conflicts.length);
 
+
+  // 18. Importar una copia sustituye todo y esa sustitución llega a los demás dispositivos (decisión del usuario); exportar incluye todo
+  const nube2 = crearNube(); const disp2 = (idb, o) => open(Object.assign({ idb, wait: 400, seed: false, before: w => nube2.instalar(w),
+    ls: { plan_cid: CID, plan_sync_on: '1', plan_tok: JSON.stringify({ t: 'TOK', e: Date.now() + 3600e3 }) } }, o || {}));
+  const P = disp2(new IDBFactory(), { seed: true }); await P.ready(); await sync(P);
+  const Q = disp2(new IDBFactory()); await Q.ready(); await sync(Q);
+  T('importar+sync: partimos de dos dispositivos iguales', norm(P.S()) == norm(Q.S()) && P.S().clients.length == 3);
+  P.tab('dat'); P.clk('[data-a=exp]'); const copia = P.d.querySelector('#bk').value;
+  await edit(P, "st.clients.splice(0,1);st.clients.push({id:'nuevoP',name:'Añadido después',notes:'',plans:[],weeks:[],cases:[]});save()");
+  await sync(P); await sync(Q);
+  T('importar+sync: el cambio posterior llega a Q', Q.S().clients.length == 3 && Q.S().clients.some(c => c.id == 'nuevoP'));
+  P.set('#bk', copia); P.clk('[data-a=imp]'); await P.flush();
+  T('importar+sync: P vuelve exactamente a la copia', norm(P.S()) == norm(JSON.parse(copia)));
+  await sync(P); await sync(Q);
+  T('importar+sync: Q recibe la sustitución completa (vuelve el borrado y se va lo añadido)', norm(Q.S()) == norm(P.S()) && !Q.S().clients.some(c => c.id == 'nuevoP') && Q.S().clients.length == 3 && Q.S().conflicts.length == 0);
+  T('importar+sync: sin errores', P.errs.length == 0 && Q.errs.length == 0);
+  // Tiempo "real": un cambio en P llega a Q solo con abrir/volver a primer plano (sin pulsar nada)
+  await edit(P, "st.clients[0].notes='sin pulsar nada';save()"); await pausa(2900); await P.flush();
+  T('envío automático: a los pocos segundos P queda "Todo enviado" sin pulsar nada', pend(P) == 0 && C0(P).notes == 'sin pulsar nada');
+  Q.d.dispatchEvent(new Q.w.Event('visibilitychange')); await pausa(900); await Q.flush();
+  T('al volver a primer plano Q se actualiza solo', C0(Q).notes == 'sin pulsar nada');
+  [P, Q].forEach(D => D.close());
   [A, B, Dv, X, Y, Z, W].forEach(D => D.close());
   H0.finish();
 })().catch(e => { console.log('EXCEPCIÓN:', e.stack); process.exit(1); });

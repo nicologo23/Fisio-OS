@@ -1,6 +1,6 @@
 # Guía de pruebas manuales de la sincronización (iPhone, iPad y Opera)
 
-Para hacer con calma, con **datos ficticios**. Anota en cada prueba si salió **Bien**, **Raro** o **Mal** y, si no fue «Bien», qué viste exactamente (mejor con captura de pantalla). Con eso lo revisamos juntos antes de pasar la app de Google a producción. Hasta entonces **la app de Google se queda en modo Testing**.
+Para hacer con calma, con **datos ficticios**. **No es en tiempo real:** los cambios se envían solos a los pocos segundos y se reciben al abrir la app, al volver a ella o con «Sincronizar ahora»; no hace falta recargar. Anota en cada prueba si salió **Bien**, **Raro** o **Mal** y, si no fue «Bien», qué viste exactamente (mejor con captura de pantalla). Con eso lo revisamos juntos antes de pasar la app de Google a producción. Hasta entonces **la app de Google se queda en modo Testing**.
 
 Versión de la app que se prueba: **2026.11.25-5** (se ve abajo del todo en la pestaña **Datos**).
 
@@ -79,7 +79,7 @@ El permiso de Google dura aproximadamente **1 hora**.
 ## 9. Copias manuales y desconectar
 
 1. **Datos → Guardar copia como archivo** funciona como antes (se descarga o se abre la hoja de compartir).
-2. **No uses «Importar» durante estas pruebas** salvo que quieras comprobar justo eso: **importar sustituye todo y, con la sincronización activada, la sustitución se replica en los otros dispositivos.** Antes guarda una copia.
+2. **Exportar** avisa antes y la copia contiene **todos** los datos. **Importar** también avisa: **sustituye todo** lo que hay en el dispositivo (y llega a los demás al sincronizar). Pruébalo con datos ficticios: exporta, cambia algo, importa la copia y comprueba que todo vuelve a como estaba en ese dispositivo y, tras sincronizar, en los otros.
 3. En el iPad pulsa **Desconectar**. **Esperado:** la sincronización queda desactivada en ese dispositivo, tus datos siguen ahí y la barra desaparece. Vuelve a conectarlo después.
 
 ## 10. Comprobaciones de que no se ha roto nada
