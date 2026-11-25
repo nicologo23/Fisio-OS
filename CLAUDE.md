@@ -40,7 +40,7 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 | `01-base.js` | Constantes, estado `st` (vacío al cargar el script), `save()` (→ `Datos.programar`), `all()/byId()`, utilidades (`$`, `esc`, `flash`), `APPV` |
 | `02-dibujos.js` | Figuras de palitos: posturas `PO/PF`, reglas `AR/SR/FIX`, `frame`, `pic` |
 | `03-biblioteca.js` | Filtros, editor de ejercicio, `lib()`, `list()`, tarjeta `card` |
-| `04-planificacion.js` | Pacientes (`cli`), rutinas (`rut`, con asa para arrastrar ejercicios), semana (`sem`), `addToR` |
+| `04-planificacion.js` | Pacientes (`cli`), rutinas (`rut`, arrastrando el bloque o el asa para reordenar ejercicios), semana (`sem`), `addToR` |
 | `05-fisioterapia.js` | Lesiones (`fis`, `fdet`), mapa corporal (`ZN`, `bodyChart`), severidad (`sev`), recaídas, resumen |
 | `06-pdf.js` | `buildPDF`, `buildGroupPDF`, `pdfSave` y compartir/descargar |
 | `07-grupos.js` | `grpReport` (cálculo), `grpView`, `grp()` |

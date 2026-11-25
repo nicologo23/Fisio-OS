@@ -112,8 +112,9 @@ else if(t.id=='ac'&&t.value){const c=st.clients.find(x=>x.id==t.value),r=cur();i
 else if(t.id=='rs'){st.active=t.value;save();render()}
 else if(t.dataset.a=='wk'){st.week[t.dataset.d]=t.value;delArm=null;save();render()}});
 
-// Reordenar los ejercicios de una rutina arrastrando el asa (ratón o dedo; Pointer Events). Los botones ↑ ↓ siguen funcionando.
-(()=>{let D=null;
+// Reordenar los ejercicios de una rutina arrastrando el bloque entero o el asa (ratón o dedo; Pointer Events). Los botones ↑ ↓ siguen funcionando.
+// Desde el bloque: con ratón, al mover más de 5 px; con dedo, tras mantener pulsado 0,3 s (así se puede seguir desplazando la pantalla). Botones, cuadros, desplegables y etiquetas no arrastran.
+(()=>{let D=null,P=null;
  const sy=()=>window.pageYOffset||0;
  const mover=()=>{if(!D)return;const dy=D.vy-D.y0+(sy()-D.sy0),c=D.cen[D.from]+dy;
   let to=0;D.cen.forEach((m,i)=>{if(i!=D.from&&m<c)to++});D.to=to;
@@ -122,16 +123,29 @@ else if(t.dataset.a=='wk'){st.week[t.dataset.d]=t.value;delArm=null;save();rende
  const bucle=()=>{if(!D)return;const h=window.innerHeight||800,v=D.vy;let d=0;if(v<70)d=-12;else if(v>h-70)d=12;
   if(d){try{window.scrollBy(0,d)}catch(e){}mover()}D.raf=requestAnimationFrame(bucle)};
  const limpiar=()=>{if(!D)return;cancelAnimationFrame(D.raf);D.rows.forEach(r=>{r.style.transform='';r.classList.remove('mov','arrastrando')});document.body.classList.remove('arrastrando-ya');D=null};
- document.addEventListener('pointerdown',ev=>{
-  const g=ev.target.closest&&ev.target.closest('[data-grip]');if(!g||D||(ev.pointerType=='mouse'&&ev.button!==0))return;
-  const row=g.closest('.card.item'),rows=[...document.querySelectorAll('#app .card.item')],from=rows.indexOf(row);if(from<0)return;
-  ev.preventDefault();try{g.setPointerCapture(ev.pointerId)}catch(e){}
+ const soltarP=()=>{if(P){clearTimeout(P.t);P=null}};
+ const empezar=(row,id,y,v)=>{if(D)return;const rows=[...document.querySelectorAll('#app .card.item')],from=rows.indexOf(row);if(from<0)return;
+  try{row.setPointerCapture(id)}catch(e){}
   const rc=rows.map(r=>r.getBoundingClientRect()),s0=sy(),mg=parseFloat(getComputedStyle(row).marginBottom)||0;
-  D={rows,from,to:from,y0:ev.clientY,vy:ev.clientY,sy0:s0,cen:rc.map(r=>r.top+s0+r.height/2),paso:rc[from].height+mg,raf:0};
+  D={rows,from,to:from,y0:y,vy:v==null?y:v,sy0:s0,cen:rc.map(r=>r.top+s0+r.height/2),paso:rc[from].height+mg,raf:0};
   rows.forEach((r,i)=>r.classList.add(i==from?'arrastrando':'mov'));document.body.classList.add('arrastrando-ya');
-  D.raf=requestAnimationFrame(bucle)});
- document.addEventListener('pointermove',ev=>{if(!D)return;D.vy=ev.clientY;mover()});
- const fin=ok=>{if(!D)return;const{from,to}=D;limpiar();
+  D.raf=requestAnimationFrame(bucle)};
+ document.addEventListener('pointerdown',ev=>{
+  if(D||P||(ev.pointerType=='mouse'&&ev.button!==0))return;
+  const t=ev.target;if(!t||!t.closest)return;
+  const g=t.closest('[data-grip]');
+  if(g){const row=g.closest('.card.item');if(!row)return;ev.preventDefault();empezar(row,ev.pointerId,ev.clientY);return}
+  const row=t.closest('[data-rit]');if(!row||t.closest('button,input,select,textarea,label,a,[contenteditable]'))return;
+  const tactil=ev.pointerType!='mouse';
+  P={row,id:ev.pointerId,x:ev.clientX,y:ev.clientY,y0:ev.clientY,tactil,t:tactil?setTimeout(()=>{if(P){const q=P;P=null;empezar(q.row,q.id,q.y)}},300):0}});
+ document.addEventListener('pointermove',ev=>{
+  if(P){const d=Math.hypot((ev.clientX||0)-P.x,(ev.clientY||0)-P.y);P.y=ev.clientY;
+   if(P.tactil){if(d>8)soltarP()}else if(d>5){const q=P;soltarP();empezar(q.row,q.id,q.y0,ev.clientY)}}
+  if(!D)return;D.vy=ev.clientY;mover()});
+ // Con el dedo ya "agarrado", la pantalla no debe desplazarse mientras se arrastra.
+ document.addEventListener('touchmove',ev=>{if(D&&ev.cancelable)ev.preventDefault()},{passive:false});
+ document.addEventListener('dragstart',ev=>{if(D||P)ev.preventDefault()});
+ const fin=ok=>{soltarP();if(!D)return;const{from,to}=D;limpiar();
   if(ok&&to!=from){const r=cur();if(r&&r.items[from]){const[m]=r.items.splice(from,1);r.items.splice(to,0,m);save();render()}}};
  document.addEventListener('pointerup',()=>fin(true));
  document.addEventListener('pointercancel',()=>fin(false))})();

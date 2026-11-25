@@ -2,13 +2,13 @@
 
 Para hacer con calma, con **datos ficticios**. **No es en tiempo real:** los cambios se envían solos a los pocos segundos y se reciben al abrir la app, al volver a ella o con «Sincronizar ahora»; no hace falta recargar. Anota en cada prueba si salió **Bien**, **Raro** o **Mal** y, si no fue «Bien», qué viste exactamente (mejor con captura de pantalla). Con eso lo revisamos juntos antes de pasar la app de Google a producción. Hasta entonces **la app de Google se queda en modo Testing**.
 
-Versión de la app que se prueba: **2026.11.25-7** (o la más nueva) (se ve abajo del todo en la pestaña **Datos**).
+Versión de la app que se prueba: **2026.11.25-8** (o la más nueva) (se ve abajo del todo en la pestaña **Datos**).
 
 ## 0. Preparación (una sola vez)
 
 1. Fusiona la propuesta de cambios (pull request) en GitHub y espera 1–2 minutos a que GitHub Pages publique.
 2. Abre la app en cada dispositivo. Si aparece el aviso **«Hay una versión nueva de la app»**, pulsa **Actualizar**.
-3. Entra en **Datos** y comprueba que abajo pone la versión **2026.11.25-7** (o más nueva). Si pone una anterior, **cierra la app del todo** (deslizar hacia arriba en el selector de apps) y vuelve a abrirla; la actualización solo se busca al abrirla de nuevo, y a veces hay que hacerlo dos veces. Si añades la app a la pantalla de inicio desde Safari **por primera vez**, ya descarga la última versión (no verás botón «Actualizar») y empieza **sin datos**: es lo esperado, se recuperan al conectar con Google.
+3. Entra en **Datos** y comprueba que abajo pone la versión **2026.11.25-8** (o más nueva). Si pone una anterior, **cierra la app del todo** (deslizar hacia arriba en el selector de apps) y vuelve a abrirla; la actualización solo se busca al abrirla de nuevo, y a veces hay que hacerlo dos veces. Si añades la app a la pantalla de inicio desde Safari **por primera vez**, ya descarga la última versión (no verás botón «Actualizar») y empieza **sin datos**: es lo esperado, se recuperan al conectar con Google.
 4. Ten a mano el **ID de cliente de Google** (el mismo que usaste en la página de prueba). Si en ese dispositivo ya lo usaste con la página de prueba, puede aparecer ya relleno y la tarjeta te pedirá directamente «Conectar con Google».
 5. Antes de empezar, en Opera pulsa **Datos → Guardar copia como archivo** (copia de seguridad ficticia, por si acaso).
 
@@ -84,7 +84,7 @@ El permiso de Google dura aproximadamente **1 hora**.
 
 ## 10. Comprobaciones de que no se ha roto nada
 
-- **Rutinas → arrastrar y soltar:** en cada ejercicio de una rutina hay un botón de puntos (⠿) a la izquierda de las flechas. Mantenlo pulsado y arrastra el ejercicio arriba o abajo (con el dedo en iPhone/iPad o con el ratón en Opera) y suéltalo en su sitio; los demás se apartan. Comprueba que se guarda el orden y que se sincroniza. Las flechas ↑ ↓ siguen funcionando. Si arrastras cerca del borde de la pantalla, la lista se desplaza sola.
+- **Rutinas → arrastrar y soltar:** puedes mover un ejercicio de dos formas. (1) Agarrándolo por cualquier parte del bloque que no sea un botón, un cuadro de texto, un desplegable o una etiqueta: con el ratón (Opera), pulsa y mueve; con el dedo (iPhone/iPad), mantén el dedo quieto unos 0,3 segundos y, cuando el bloque se «levante», arrastra. Si deslizas el dedo enseguida, la pantalla se desplaza como siempre y no se mueve nada. (2) Con el botón de seis puntos (⠿), que arrastra al instante. En ambos casos los demás ejercicios se apartan, y al soltar se guarda el orden y se sincroniza. Si arrastras cerca del borde de la pantalla, la lista se desplaza sola. Las flechas ↑ ↓ siguen funcionando. Comprueba también que se pueden seguir escribiendo series, repeticiones, etc. sin que se mueva el bloque.
 - **Pacientes:** la palabra «Deportistas» ha pasado a «Pacientes» en toda la app (menús, pantallas, PDFs y resúmenes).
 - Abre cada pestaña (Hoy, Biblioteca, Rutinas, Semana, Pacientes, Fisioterapia, Grupos, Datos) y comprueba que **se ven y funcionan como antes**, en los 3 estilos y en claro/oscuro.
 - Genera un PDF de un plan y de un informe.
