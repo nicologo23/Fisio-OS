@@ -3,7 +3,7 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 let bad = 0; const T = (n, c) => { if (!c) { bad++; console.log('FALLA:', n); } };
 const rd = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
-const html = rd('index.html') + (fs.existsSync(path.join(ROOT, 'js/app.js')) ? rd('js/app.js') : ''), sw = rd('sw.js');
+const html = rd('index.html') + fs.readdirSync(path.join(ROOT, 'js')).filter(f => f.endsWith('.js')).sort().map(f => rd('js/' + f)).join('\n'), sw = rd('sw.js');
 const appv = (html.match(/const APPV='([^']+)'/) || [])[1];
 const cache = (sw.match(/const V='plan-([^']+)'/) || [])[1];
 T('index.html declara APPV', !!appv);

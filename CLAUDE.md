@@ -21,16 +21,33 @@ No hay paso de compilación: lo que está en el repositorio es lo que se publica
 | `index.html` | Solo la estructura de la página (cabecera, contenedores) y la carga de los demás archivos. |
 | `css/app.css` | Todos los estilos (3 estilos visuales, claro/oscuro, iPhone/iPad/ordenador). |
 | `datos/ejercicios.js` | Biblioteca `LIB`: 909 ejercicios en una sola línea (~680 KB). **No abrir entero**: leerlo por trozos o con búsquedas. Cambia rara vez. |
-| `js/app.js` | Toda la lógica de la app (~125 KB). Pendiente de dividir en archivos por temas (ver hoja de ruta). |
+| `js/01-base.js` … `js/12-inicio.js` | Toda la lógica, dividida por temas y numerada **en orden de carga** (ver tabla de abajo). Primera línea de cada archivo: qué contiene. |
 | `sw.js` | Service worker: caché primero, precarga los archivos de `FILES` y activa la nueva versión al instante. |
 | `manifest.webmanifest`, `icon-*.png` | Instalación como PWA. |
 | `jspdf.umd.min.js` | jsPDF 4.2.1 en local (PDFs sin internet). |
 | `tests/`, `package.json` | Pruebas automáticas (ver abajo). `node_modules/` no se sube. |
 
-Orden de carga (scripts clásicos, comparten el ámbito global): `jspdf` → `datos/ejercicios.js` → `js/app.js`. `LIB` debe cargarse antes que `js/app.js`.
+Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, así que una función de un archivo se puede usar desde otro): `jspdf` → `datos/ejercicios.js` → `js/01…12`. El orden está en `index.html` y la precarga en `sw.js`.
+
+| Archivo | Contenido |
+|---|---|
+| `01-base.js` | Constantes, estado `st`, `save()`, `all()/byId()`, utilidades (`$`, `esc`, `flash`), `APPV` |
+| `02-dibujos.js` | Figuras de palitos: posturas `PO/PF`, reglas `AR/SR/FIX`, `frame`, `pic` |
+| `03-biblioteca.js` | Filtros, editor de ejercicio, `lib()`, `list()`, tarjeta `card` |
+| `04-planificacion.js` | Deportistas (`cli`), rutinas (`rut`), semana (`sem`), `addToR` |
+| `05-fisioterapia.js` | Lesiones (`fis`, `fdet`), mapa corporal (`ZN`, `bodyChart`), severidad (`sev`), recaídas, resumen |
+| `06-pdf.js` | `buildPDF`, `buildGroupPDF`, `pdfSave` y compartir/descargar |
+| `07-grupos.js` | `grpReport` (cálculo), `grpView`, `grp()` |
+| `08-aspecto.js` | `ui`, `applyUI`, iconos, `nav()`, ajustes de aspecto |
+| `09-hoy.js` | Pantalla Hoy |
+| `10-copias.js` | Copias de seguridad, aviso de 14 días, pantalla Datos |
+| `11-eventos.js` | `V`, `render()`, listeners `click/input/change` (acciones `data-a`) |
+| `12-inicio.js` | Arranque (`applyUI(); render()`), almacenamiento persistente, service worker |
+
+**Al añadir un archivo JS**: añadirlo a `index.html` (en su sitio del orden) y a `FILES` de `sw.js`. Las sentencias que se ejecutan al cargar (p. ej. `fixCases()`, `ZN.forEach`, `Object.assign(PO,…)`) dependen del orden; las funciones y constantes que solo se usan dentro de funciones pueden estar en cualquier archivo anterior a `12-inicio.js`.
 
 ## Arquitectura (resumen; buscar por nombre, los números de línea cambian)
-- JavaScript sin framework, sin módulos ni compilación (`js/app.js`). Vistas = funciones que devuelven HTML en plantillas y se pintan con `innerHTML`.
+- JavaScript sin framework, sin módulos ni compilación (`js/*.js`). Vistas = funciones que devuelven HTML en plantillas y se pintan con `innerHTML`.
 - `render()` → `V[tab]()`; pestañas: `hoy, lib, rut, sem, cli, fis, grp, dat`.
 - Estado global `st`; `save()` guarda **todo** `st` en localStorage. Preferencias visuales en `ui` (`plan_ui`), aplicadas con `applyUI()` (atributos `data-style` y `data-mode` en `<html>`).
 - Eventos: 3 listeners delegados (`click`, `input`, `change`). Cada botón lleva `data-a="acción"`; el manejador es una cadena larga de `else if(a=='…')`. Hay ~70 acciones.
@@ -59,7 +76,7 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - `today()` usa `toISOString()` (UTC): cerca de medianoche puede dar el día anterior/siguiente.
 - Editar una anotación clínica solo permite cambiar texto y fecha; añadir una exige texto o medida.
 - Borrar una rutina deja su id huérfano en `st.week`.
-- Toda la lógica está aún en `js/app.js`: un cambio en un sitio puede afectar a otro. Cambios pequeños y probados.
+- Todo comparte el ámbito global (nombres de variables y funciones): al añadir algo, comprobar que el nombre no existe ya (`grep`). Cambios pequeños y probados.
 
 ## Pruebas
 - `npm install` (una vez) y `npm test`. Usan jsdom con datos ficticios; salen con código distinto de 0 si algo falla.
