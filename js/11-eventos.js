@@ -35,7 +35,7 @@ else if(a=='falta'){const f=fcase();if(!f)return;f.status='Alta';f.closed=$('#fc
 else if(a=='freopen'){const f=fcase();if(!f)return;f.status='Activa';delete f.closed;fsum='';save();render();flash('Lesión reabierta')}
 else if(a=='gnew'){const n=$('#gn').value.trim();if(!n)return;const g={id:uid('g'),name:n,members:[]};st.groups.push(g);st.gsel=g.id;save();render()}
 else if(a=='gdel'){const g=curG();if(!g)return;if(delArm!='g'+g.id){delArm='g'+g.id;render();return}st.groups=st.groups.filter(x=>x.id!=g.id);st.gsel=null;delArm=null;save();render()}
-else if(a=='gpdf'){const g=curG();if(!g||!g.members.length){flash('Añade deportistas al grupo');return}const R=grpReport(g);pdfSave({group:true,R,title:g.name,athlete:g.name},('Informe_grupo_'+g.name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\-]+/g,'_')+'_'+today()+'.pdf')}
+else if(a=='gpdf'){const g=curG();if(!g||!g.members.length){flash('Añade pacientes al grupo');return}const R=grpReport(g);pdfSave({group:true,R,title:g.name,athlete:g.name},('Informe_grupo_'+g.name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\-]+/g,'_')+'_'+today()+'.pdf')}
 else if(a=='fpan'){fpan=!fpan;const p=$('#fpanel');if(p)p.classList.toggle('open',fpan)}
 else if(a=='ui'){const u=b.dataset.u,v=b.dataset.v;ui[u]=(u=='fs'||u=='dens')?+v:v;saveUI();applyUI();render()}
 else if(a=='uit'){ui[b.dataset.u]=b.checked?1:0;saveUI();render()}
@@ -53,7 +53,7 @@ else if(a=='pdfx'){pdfX()}
 else if(a=='updgo'){location.reload()}
 else if(a.slice(0,2)=='sy'){Sync.accion(a,b)}
 else if(a=='newweek'){const has=Object.values(st.week).some(Boolean);if(has&&delArm!='week'){delArm='week';render();return}st.week={};delArm=null;save();render();flash('Semana nueva')}
-else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').value):cc();if(!c){flash('Elige un deportista');return}const sn=weekSnap();if(!sn.some(d=>d.name)){flash('La semana está vacía');return}const nm=a=='aw'?$('#wn').value.trim():'';cw(c).unshift({id:uid('w'),date:today(),name:nm||'Semana del '+today(),note:'',days:sn});st.week={};delArm=null;save();flash('Semana asignada a '+c.name+' y semana vaciada');render()}
+else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').value):cc();if(!c){flash('Elige un paciente');return}const sn=weekSnap();if(!sn.some(d=>d.name)){flash('La semana está vacía');return}const nm=a=='aw'?$('#wn').value.trim():'';cw(c).unshift({id:uid('w'),date:today(),name:nm||'Semana del '+today(),note:'',days:sn});st.week={};delArm=null;save();flash('Semana asignada a '+c.name+' y semana vaciada');render()}
 else if(a=='wdel'){cw(cc()).splice(i,1);showTxt='';save();render()}
 else if(a=='wcopy'){const w=cw(cc())[i];w.days.forEach((d,k)=>{if(!d.name){delete st.week[k];return}const j=JSON.stringify(d.items);let r=st.routines.find(x=>x.name==d.name&&JSON.stringify(x.items)==j);if(!r){r={id:uid('r'),name:d.name,items:JSON.parse(j)};st.routines.push(r)}st.week[k]=r.id});save();flash('Copiada a Semana')}
 else if(a=='wtxt'||a=='ptxt'){const key=(a=='wtxt'?'w':'p')+i;showTxt=showTxt==key?'':key;render();setTimeout(()=>{const t=$('#txtbox');if(t){t.focus();t.select()}},0)}
@@ -111,3 +111,27 @@ else if(t.id=='cs'){st.cc=t.value;showTxt='';fsum='';save();render()}
 else if(t.id=='ac'&&t.value){const c=st.clients.find(x=>x.id==t.value),r=cur();if(c&&r){c.plans.unshift({id:uid('p'),date:new Date().toISOString().slice(0,10),name:r.name,note:'',items:JSON.parse(JSON.stringify(r.items))});save();flash('Asignada a '+c.name)}render()}
 else if(t.id=='rs'){st.active=t.value;save();render()}
 else if(t.dataset.a=='wk'){st.week[t.dataset.d]=t.value;delArm=null;save();render()}});
+
+// Reordenar los ejercicios de una rutina arrastrando el asa (ratón o dedo; Pointer Events). Los botones ↑ ↓ siguen funcionando.
+(()=>{let D=null;
+ const sy=()=>window.pageYOffset||0;
+ const mover=()=>{if(!D)return;const dy=D.vy-D.y0+(sy()-D.sy0),c=D.cen[D.from]+dy;
+  let to=0;D.cen.forEach((m,i)=>{if(i!=D.from&&m<c)to++});D.to=to;
+  D.rows.forEach((r,i)=>{if(i==D.from){r.style.transform='translateY('+dy+'px)';return}
+   const d=(i>D.from&&i<=to)?-D.paso:(i<D.from&&i>=to)?D.paso:0;r.style.transform=d?'translateY('+d+'px)':''})};
+ const bucle=()=>{if(!D)return;const h=window.innerHeight||800,v=D.vy;let d=0;if(v<70)d=-12;else if(v>h-70)d=12;
+  if(d){try{window.scrollBy(0,d)}catch(e){}mover()}D.raf=requestAnimationFrame(bucle)};
+ const limpiar=()=>{if(!D)return;cancelAnimationFrame(D.raf);D.rows.forEach(r=>{r.style.transform='';r.classList.remove('mov','arrastrando')});document.body.classList.remove('arrastrando-ya');D=null};
+ document.addEventListener('pointerdown',ev=>{
+  const g=ev.target.closest&&ev.target.closest('[data-grip]');if(!g||D||(ev.pointerType=='mouse'&&ev.button!==0))return;
+  const row=g.closest('.card.item'),rows=[...document.querySelectorAll('#app .card.item')],from=rows.indexOf(row);if(from<0)return;
+  ev.preventDefault();try{g.setPointerCapture(ev.pointerId)}catch(e){}
+  const rc=rows.map(r=>r.getBoundingClientRect()),s0=sy(),mg=parseFloat(getComputedStyle(row).marginBottom)||0;
+  D={rows,from,to:from,y0:ev.clientY,vy:ev.clientY,sy0:s0,cen:rc.map(r=>r.top+s0+r.height/2),paso:rc[from].height+mg,raf:0};
+  rows.forEach((r,i)=>r.classList.add(i==from?'arrastrando':'mov'));document.body.classList.add('arrastrando-ya');
+  D.raf=requestAnimationFrame(bucle)});
+ document.addEventListener('pointermove',ev=>{if(!D)return;D.vy=ev.clientY;mover()});
+ const fin=ok=>{if(!D)return;const{from,to}=D;limpiar();
+  if(ok&&to!=from){const r=cur();if(r&&r.items[from]){const[m]=r.items.splice(from,1);r.items.splice(to,0,m);save();render()}}};
+ document.addEventListener('pointerup',()=>fin(true));
+ document.addEventListener('pointercancel',()=>fin(false))})();

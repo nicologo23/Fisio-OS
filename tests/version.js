@@ -12,6 +12,8 @@ T('APPV (index.html) == V (sw.js): ' + appv + ' / ' + cache, appv && appv === ca
 const files = JSON.parse((sw.match(/const FILES=(\[[^\]]*\])/) || [, '[]'])[1]);
 T('sw.js precarga archivos', files.length > 0);
 for (const f of files) if (f !== './') T('existe ' + f, fs.existsSync(path.join(ROOT, f)));
+// Todos los archivos JS (incluido sw.js) deben ser sintácticamente válidos: un sw.js roto impediría actualizar la app.
+for (const f of ['sw.js'].concat(fs.readdirSync(path.join(ROOT, 'js')).filter(f => f.endsWith('.js')).map(f => 'js/' + f))) { try { new (require('vm').Script)(rd(f), { filename: f }); T('sintaxis válida: ' + f, true); } catch (e) { T('sintaxis válida: ' + f + ' (' + e.message + ')', false); } }
 const man = JSON.parse(rd('manifest.webmanifest'));
 T('manifest con nombre e iconos', !!man.name && Array.isArray(man.icons) && man.icons.length > 0);
 for (const i of man.icons || []) T('icono del manifest existe: ' + i.src, fs.existsSync(path.join(ROOT, i.src)));

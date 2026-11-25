@@ -2,13 +2,13 @@
 
 Para hacer con calma, con **datos ficticios**. **No es en tiempo real:** los cambios se envían solos a los pocos segundos y se reciben al abrir la app, al volver a ella o con «Sincronizar ahora»; no hace falta recargar. Anota en cada prueba si salió **Bien**, **Raro** o **Mal** y, si no fue «Bien», qué viste exactamente (mejor con captura de pantalla). Con eso lo revisamos juntos antes de pasar la app de Google a producción. Hasta entonces **la app de Google se queda en modo Testing**.
 
-Versión de la app que se prueba: **2026.11.25-5** (se ve abajo del todo en la pestaña **Datos**).
+Versión de la app que se prueba: **2026.11.25-7** (o la más nueva) (se ve abajo del todo en la pestaña **Datos**).
 
 ## 0. Preparación (una sola vez)
 
 1. Fusiona la propuesta de cambios (pull request) en GitHub y espera 1–2 minutos a que GitHub Pages publique.
 2. Abre la app en cada dispositivo. Si aparece el aviso **«Hay una versión nueva de la app»**, pulsa **Actualizar**.
-3. Entra en **Datos** y comprueba que abajo pone la versión **2026.11.25-5**. Si no, cierra la app del todo y vuelve a abrirla.
+3. Entra en **Datos** y comprueba que abajo pone la versión **2026.11.25-7** (o más nueva). Si pone una anterior, **cierra la app del todo** (deslizar hacia arriba en el selector de apps) y vuelve a abrirla; la actualización solo se busca al abrirla de nuevo, y a veces hay que hacerlo dos veces. Si añades la app a la pantalla de inicio desde Safari **por primera vez**, ya descarga la última versión (no verás botón «Actualizar») y empieza **sin datos**: es lo esperado, se recuperan al conectar con Google.
 4. Ten a mano el **ID de cliente de Google** (el mismo que usaste en la página de prueba). Si en ese dispositivo ya lo usaste con la página de prueba, puede aparecer ya relleno y la tarjeta te pedirá directamente «Conectar con Google».
 5. Antes de empezar, en Opera pulsa **Datos → Guardar copia como archivo** (copia de seguridad ficticia, por si acaso).
 
@@ -24,8 +24,8 @@ Versión de la app que se prueba: **2026.11.25-5** (se ve abajo del todo en la p
 ## 2. Recuperar los datos en el iPhone (app instalada)
 
 1. Abre la app instalada. **Datos →** ID de cliente (si no está) → **Guardar ID** → **Conectar con Google** → acepta.
-2. **Esperado:** en unos segundos aparecen los **mismos deportistas, rutinas y lesiones** que en Opera. Estado «Sincronizado» y «Todo enviado».
-3. Mira **Hoy**, **Deportistas** y **Fisioterapia**: ¿todo está como en Opera?
+2. **Esperado:** en unos segundos aparecen los **mismos pacientes, rutinas y lesiones** que en Opera. Estado «Sincronizado» y «Todo enviado».
+3. Mira **Hoy**, **Pacientes** y **Fisioterapia**: ¿todo está como en Opera?
 
 ## 3. Lo mismo en el iPad
 
@@ -33,7 +33,7 @@ Repite la prueba 2. Como el iPhone ya funcionó, aquí solo importa que también
 
 ## 4. Un cambio viaja entre dispositivos
 
-1. En el **iPhone**: añade una anotación a una lesión (por ejemplo «prueba 4 iPhone») o cambia las notas de un deportista.
+1. En el **iPhone**: añade una anotación a una lesión (por ejemplo «prueba 4 iPhone») o cambia las notas de un paciente.
 2. Espera unos 3 segundos y mira el estado: debe pasar por «1 cambio sin enviar» a «Todo enviado».
 3. En **Opera** y en el **iPad**: abre la app (o pulsa **Sincronizar ahora**). **Esperado:** aparece el cambio y un aviso «Sincronizado: se han traído cambios de otro dispositivo».
 4. Haz lo mismo al revés: cambio en Opera → verlo en el iPhone.
@@ -62,10 +62,10 @@ El permiso de Google dura aproximadamente **1 hora**.
 ## 7. Conflicto: se cambia lo mismo en dos dispositivos
 
 1. Pon el **iPhone en modo avión**.
-2. En el iPhone cambia las **notas** de un deportista a «versión iPhone».
-3. En **Opera** cambia las notas de **ese mismo** deportista a «versión Opera» (espera 3 s a que se envíe).
+2. En el iPhone cambia las **notas** de un paciente a «versión iPhone».
+3. En **Opera** cambia las notas de **ese mismo** paciente a «versión Opera» (espera 3 s a que se envíe).
 4. Quita el modo avión del iPhone y ábrela. **Esperado:** aviso «Sincronizado: hay 1 conflicto por revisar en Datos». En Datos sale **Conflictos por revisar (1)** con la versión que ha quedado de lado.
-5. Comprueba que **no se ha perdido ninguna** de las dos versiones: una está en el deportista y la otra en el conflicto.
+5. Comprueba que **no se ha perdido ninguna** de las dos versiones: una está en el paciente y la otra en el conflicto.
 6. Pulsa **Usar esta versión**: las dos se intercambian. Pulsa **Descartar** (pide confirmar) para quitarlo.
 7. En Opera, sincroniza y comprueba que ve el mismo resultado.
 
@@ -84,7 +84,9 @@ El permiso de Google dura aproximadamente **1 hora**.
 
 ## 10. Comprobaciones de que no se ha roto nada
 
-- Abre cada pestaña (Hoy, Biblioteca, Rutinas, Semana, Deportistas, Fisioterapia, Grupos, Datos) y comprueba que **se ven y funcionan como antes**, en los 3 estilos y en claro/oscuro.
+- **Rutinas → arrastrar y soltar:** en cada ejercicio de una rutina hay un botón de puntos (⠿) a la izquierda de las flechas. Mantenlo pulsado y arrastra el ejercicio arriba o abajo (con el dedo en iPhone/iPad o con el ratón en Opera) y suéltalo en su sitio; los demás se apartan. Comprueba que se guarda el orden y que se sincroniza. Las flechas ↑ ↓ siguen funcionando. Si arrastras cerca del borde de la pantalla, la lista se desplaza sola.
+- **Pacientes:** la palabra «Deportistas» ha pasado a «Pacientes» en toda la app (menús, pantallas, PDFs y resúmenes).
+- Abre cada pestaña (Hoy, Biblioteca, Rutinas, Semana, Pacientes, Fisioterapia, Grupos, Datos) y comprueba que **se ven y funcionan como antes**, en los 3 estilos y en claro/oscuro.
 - Genera un PDF de un plan y de un informe.
 - Con la sincronización activada, comprueba que la app sigue siendo igual de rápida al abrir.
 

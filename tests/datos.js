@@ -12,7 +12,7 @@ const abrir = (idb, o) => open(Object.assign({ idb, wait: 500, seed: false }, o 
   // 1. Migración desde la versión anterior (localStorage -> IndexedDB)
   let A = abrir(idb, { seed: true }); await A.ready();
   T('migración: arranca sin errores', A.errs.length == 0);
-  T('migración: se importan los 3 deportistas', A.S().clients.length == 3);
+  T('migración: se importan los 3 pacientes', A.S().clients.length == 3);
   T('migración: los datos son idénticos a los originales', JSON.stringify(norm(A.S())) == JSON.stringify(norm(demo())));
   T('migración: copia antigua conservada y marca puesta', !!A.w.localStorage.getItem('plan_v1') && !!A.w.localStorage.getItem('plan_v1_migrado'));
   const regs = await A.Datos.registros(0);
@@ -49,7 +49,7 @@ const abrir = (idb, o) => open(Object.assign({ idb, wait: 500, seed: false }, o 
   const lap = (await B.Datos.registros(0)).filter(r => r.deletedAt);
   T('las lápidas conservan tipo e id pero no el contenido', lap.length == 2 && lap.every(r => r.data === null && r.id && r.kind));
   B.w.eval("st.clients=st.clients.filter(c=>c.id!='k3');save()"); await B.flush();
-  T('borrar deportista con 1 lesión = 2 lápidas', B.Datos.ultimaEscritura() == 2);
+  T('borrar paciente con 1 lesión = 2 lápidas', B.Datos.ultimaEscritura() == 2);
   B.close();
   let C = abrir(idb); await C.ready();
   T('tras borrar y reabrir no reaparece nada', C.S().clients.length == 2 && !C.S().clients[0].cases.some(f => f.id == 'f2') && !JSON.stringify(C.S().clients).includes('"k3"'));

@@ -2,7 +2,7 @@
 const AM=[["Flexión","Hombro"],["Extensión","Hombro"],["Abducción","Hombro"],["Aducción","Hombro"],["Flexión horizontal","Hombro"],["Extensión horizontal","Hombro"],["Rotación interna","Hombro"],["Rotación externa","Hombro"],["Retracción","Escápula"],["Elevación","Escápula"],["Flexión","Codo"],["Extensión","Codo"],["Flexión","Muñeca"],["Extensión","Muñeca"],["Flexión","Cadera"],["Extensión","Cadera"],["Abducción","Cadera"],["Aducción","Cadera"],["Flexión","Rodilla"],["Extensión","Rodilla"],["Flexión plantar","Tobillo"],["Flexión","Tronco"],["Extensión","Tronco"],["Rotación","Tronco"],["Estabilización isométrica","Tronco"],["Flexión","Cuello"],["Extensión","Cuello"],["Flexión dorsal","Tobillo"],["Desviación radial","Muñeca"],["Desviación cubital","Muñeca"],["Flexión lateral","Tronco"],["Flexión lateral","Cuello"],["Rotación interna","Cadera"],["Rotación externa","Cadera"],["Protracción","Escápula"],["Depresión","Escápula"],["Flexión","Pie"],["Extensión","Pie"],["Abducción","Pie"],["Aducción","Pie"],["Estabilización isométrica","Pie"]];
 const G=['Pecho','Espalda','Piernas','Hombros','Bíceps','Tríceps','Core','Cardio','Otro'];
 const D=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-const T=[['lib','Biblioteca'],['rut','Rutinas'],['sem','Semana'],['cli','Deportistas'],['fis','Fisioterapia'],['grp','Grupos'],['dat','Datos']];
+const T=[['lib','Biblioteca'],['rut','Rutinas'],['sem','Semana'],['cli','Pacientes'],['fis','Fisioterapia'],['grp','Grupos'],['dat','Datos']];
 const FN=['Empuje','Tracción','Dominante de rodilla','Bisagra de cadera','Core / estabilidad','Aislamiento','Cardio','Movilidad','Rehabilitación','Otra'];
 const GF={Pecho:'Empuje',Espalda:'Tracción',Piernas:'Dominante de rodilla',Hombros:'Empuje',Bíceps:'Aislamiento',Tríceps:'Aislamiento',Core:'Core / estabilidad',Cardio:'Cardio',Otro:'Otra'};
 const FOV={'Peso muerto':'Bisagra de cadera','Peso muerto rumano':'Bisagra de cadera','Curl femoral':'Bisagra de cadera','Puente de glúteo':'Bisagra de cadera','Pájaros':'Tracción','Face pull':'Tracción','Elevaciones laterales':'Aislamiento','Aperturas con mancuernas':'Aislamiento','Elevación de talones':'Aislamiento','Extensión de cuádriceps':'Aislamiento','Press francés':'Aislamiento'};
@@ -18,4 +18,4 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const opts=(a,s)=>a.map(x=>`<option ${x==s?'selected':''}>${esc(x)}</option>`).join('');
 function flash(t){const m=$('#msg');m.textContent=t;m.style.opacity=1;setTimeout(()=>m.style.opacity=0,1400)}
-const APPV='2026.11.25-6';
+const APPV='2026.11.25-7';

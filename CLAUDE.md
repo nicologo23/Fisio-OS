@@ -40,7 +40,7 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 | `01-base.js` | Constantes, estado `st` (vacío al cargar el script), `save()` (→ `Datos.programar`), `all()/byId()`, utilidades (`$`, `esc`, `flash`), `APPV` |
 | `02-dibujos.js` | Figuras de palitos: posturas `PO/PF`, reglas `AR/SR/FIX`, `frame`, `pic` |
 | `03-biblioteca.js` | Filtros, editor de ejercicio, `lib()`, `list()`, tarjeta `card` |
-| `04-planificacion.js` | Deportistas (`cli`), rutinas (`rut`), semana (`sem`), `addToR` |
+| `04-planificacion.js` | Pacientes (`cli`), rutinas (`rut`, con asa para arrastrar ejercicios), semana (`sem`), `addToR` |
 | `05-fisioterapia.js` | Lesiones (`fis`, `fdet`), mapa corporal (`ZN`, `bodyChart`), severidad (`sev`), recaídas, resumen |
 | `06-pdf.js` | `buildPDF`, `buildGroupPDF`, `pdfSave` y compartir/descargar |
 | `07-grupos.js` | `grpReport` (cálculo), `grpView`, `grp()` |
@@ -74,7 +74,7 @@ st = { custom:[], routines:[{id,name,items:[{e,sets,reps,hold,rest,load,note}]}]
                   cases:[{ id,name,status:'Activa'|'Alta',opened,closed,dx,type,act,contact,moment,zones:[zoneId],
                            entries:[{id,n,date,type,text,pain,meas:[{k,l,s,v,u}]}] }] }] }
 ```
-Las lesiones (`cases`) cuelgan del deportista; los grupos solo guardan ids de deportistas. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
+En la pantalla se les llama **Pacientes** (decisión del usuario, 25/11/2026; en el código siguen siendo `clients`/`cli`). Las lesiones (`cases`) cuelgan del paciente; los grupos solo guardan ids de pacientes. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
 
 ## Almacenamiento y sincronización
 Documento completo (arquitectura, decisiones, condiciones de Google, limitaciones): **`docs/sincronizacion.md`**. Guía de pruebas a mano: **`docs/guia-pruebas-manuales.md`**. Resumen:
@@ -90,7 +90,7 @@ Documento completo (arquitectura, decisiones, condiciones de Google, limitacione
 - **Esquema 2** (migración 1→2 automática al abrir: da versión y marca como pendiente todo lo existente). `uid(prefijo)` sigue siendo obligatorio para ids nuevos.
 - **Interfaz del proveedor** (lo único que el motor usa): `configurado()`, `conectado()`, `preparar()`, `conectar()` (desde un toque), `desconectar()`, `invalidar()`, `listar()→[{id,nombre,version}]`, `leer(id)`, `escribir(nombre,id,doc)`. Los errores llevan `codigo` (`red`, `auth`, `cancelado`…) y `mensaje` en español.
 - **ID de cliente de Google:** NO está en el código (el repositorio es público y las condiciones de Google desaconsejan incrustar credenciales en proyectos de código abierto). Se pega en Datos y se queda en `localStorage` (`plan_cid`) de cada dispositivo. Nunca subir tokens ni secretos de cliente. La app de Google sigue en **modo Testing** (hasta 100 usuarios de prueba; el permiso se vuelve a pedir cada 7 días). **No pasar a producción** hasta que el usuario y Claude hayan comprobado juntos sincronización, uso sin conexión y recuperación de datos (guía de pruebas manuales).
-- **Pruebas en dispositivos reales pendientes** (no se pueden automatizar): renovación del permiso (~1 h) en iPhone/iPad/Opera, comportamiento tras 7 días en modo Testing, iPad, cierre de ventana de Google en modo app, Opera instalada como app. `prueba-drive.html` (página aparte, no toca datos) se mantiene mientras se hacen esas pruebas; cuando no haga falta, borrarla junto con la excepción `/prueba-` de `sw.js`.
+- **Pruebas en dispositivos reales pendientes** (no se pueden automatizar): renovación del permiso (~1 h) en iPhone/iPad/Opera, comportamiento tras 7 días en modo Testing, iPad, cierre de ventana de Google en modo app, Opera instalada como app. (La página de prueba `prueba-drive.html` y su excepción en `sw.js` se borraron el 25/11/2026; el ID de cliente guardado por ella como `pd_cid` se sigue aprovechando si existe.)
 - **Riesgos conocidos:** (1) las condiciones de la API de Drive prohíben copias de seguridad de contenido de la app sin consentimiento y no definen el límite; la app sincroniza datos propios del usuario con su consentimiento explícito en su propia cuenta, pero conviene revisarlo si algún día se publica; (2) importar una copia sustituye todo a propósito (avisa antes) y, con la sincronización, **esa sustitución se replica a los demás dispositivos**; (3) un hijo creado en un dispositivo cuyo padre se borró en otro queda oculto como huérfano (no se pierde: queda retenido).
 
 ## Problemas conocidos (no arreglar de pasada: pedir confirmación)
@@ -100,7 +100,7 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - El botón "Cambiar tema" escribe `data-theme`, que ningún CSS lee: no hace nada (regresión del rediseño).
 - `today()` usa `toISOString()` (UTC): cerca de medianoche puede dar el día anterior/siguiente.
 - Editar una anotación clínica solo permite cambiar texto y fecha; añadir una exige texto o medida.
-- Borrar una rutina deja su id huérfano en `st.week`; borrar un deportista lo deja en `members` de los grupos (el informe lo ignora).
+- Borrar una rutina deja su id huérfano en `st.week`; borrar un paciente lo deja en `members` de los grupos (el informe lo ignora).
 - Todo comparte el ámbito global (nombres de variables y funciones): al añadir algo, comprobar que el nombre no existe ya (`grep`). Cambios pequeños y probados.
 
 ## Pruebas
