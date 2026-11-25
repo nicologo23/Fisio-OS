@@ -6,7 +6,7 @@ Basado en la auditoría técnica del 24/11/2026. Si algo de aquí contradice el 
 ## Qué es
 - App web original (inspirada en Harbiz, no una copia) para **planificar entrenamientos** y **seguir tratamientos de fisioterapia** de deportistas.
 - Usuario: un único fisioterapeuta/preparador que trabaja solo, en **iPhone y iPad** (Safari, instalada como PWA). Interfaz y textos en **español**; los nombres de ejercicios pueden quedar en inglés.
-- Sin servidor, sin cuentas, sin sincronización entre dispositivos. Los datos viven **solo en el navegador del dispositivo** (localStorage).
+- Sin servidor, sin cuentas, sin sincronización entre dispositivos. Los datos viven **en el navegador de cada dispositivo** (IndexedDB, base de datos `fisio-os`). La sincronización entre dispositivos está **planificada, no implementada** (ver "Almacenamiento y sincronización").
 
 ## Fase actual: desarrollo, sin datos reales
 - Decisión del usuario (25/11/2026): la app **no tiene datos reales** y seguirá así hasta tener el producto final, para no estar exportando/importando en cada cambio. No hace falta pedirle copias de seguridad al publicar mientras siga en esta fase.
@@ -14,7 +14,7 @@ Basado en la auditoría técnica del 24/11/2026. Si algo de aquí contradice el 
 - Hablar de datos reales (dónde guardarlos, copias, privacidad) está **pendiente**: el usuario lo retomará cuando toque.
 
 ## Regla nº 1: los datos del usuario son lo más valioso (obligatoria en cuanto haya datos reales)
-- Nunca cambiar la forma de `st` ni las claves de localStorage (`plan_v1`, `plan_ui`, `plan_bk`) sin una migración que conserve los datos existentes y sin probarla.
+- Nunca cambiar la forma de `st`, los registros de IndexedDB (`js/00-datos.js`) ni las claves de localStorage (`plan_ui`, `plan_bk`, `plan_v1` antigua) sin una migración que conserve los datos existentes y sin probarla.
 - Cualquier cambio que borre, sobrescriba o importe datos debe pedir confirmación al usuario y ser reversible o ir precedido de una copia.
 - **Este repositorio es público.** No subir nunca datos reales de deportistas o pacientes, ni copias de seguridad (`Planificador_copia_*.json`). Las pruebas usan datos ficticios (`tests/demo.js`).
 - No añadir claves API, credenciales ni servicios externos sin hablarlo antes. Hoy no hay ninguno.
@@ -26,17 +26,18 @@ No hay paso de compilación: lo que está en el repositorio es lo que se publica
 | `index.html` | Solo la estructura de la página (cabecera, contenedores) y la carga de los demás archivos. |
 | `css/app.css` | Todos los estilos (3 estilos visuales, claro/oscuro, iPhone/iPad/ordenador). |
 | `datos/ejercicios.js` | Biblioteca `LIB`: 909 ejercicios en una sola línea (~680 KB). **No abrir entero**: leerlo por trozos o con búsquedas. Cambia rara vez. |
+| `js/00-datos.js` | **Capa de datos**: `Datos` (IndexedDB, registros sincronizables) y `uid()`. Ver abajo. |
 | `js/01-base.js` … `js/12-inicio.js` | Toda la lógica, dividida por temas y numerada **en orden de carga** (ver tabla de abajo). Primera línea de cada archivo: qué contiene. |
 | `sw.js` | Service worker: caché primero, precarga los archivos de `FILES` y activa la nueva versión al instante. |
 | `manifest.webmanifest`, `icon-*.png` | Instalación como PWA. |
 | `jspdf.umd.min.js` | jsPDF 4.2.1 en local (PDFs sin internet). |
 | `tests/`, `package.json` | Pruebas automáticas (ver abajo). `node_modules/` no se sube. |
 
-Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, así que una función de un archivo se puede usar desde otro): `jspdf` → `datos/ejercicios.js` → `js/01…12`. El orden está en `index.html` y la precarga en `sw.js`.
+Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, así que una función de un archivo se puede usar desde otro): `jspdf` → `datos/ejercicios.js` → `js/00…12`. El orden está en `index.html` y la precarga en `sw.js`.
 
 | Archivo | Contenido |
 |---|---|
-| `01-base.js` | Constantes, estado `st`, `save()`, `all()/byId()`, utilidades (`$`, `esc`, `flash`), `APPV` |
+| `01-base.js` | Constantes, estado `st` (vacío al cargar el script), `save()` (→ `Datos.programar`), `all()/byId()`, utilidades (`$`, `esc`, `flash`), `APPV` |
 | `02-dibujos.js` | Figuras de palitos: posturas `PO/PF`, reglas `AR/SR/FIX`, `frame`, `pic` |
 | `03-biblioteca.js` | Filtros, editor de ejercicio, `lib()`, `list()`, tarjeta `card` |
 | `04-planificacion.js` | Deportistas (`cli`), rutinas (`rut`), semana (`sem`), `addToR` |
@@ -47,20 +48,21 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 | `09-hoy.js` | Pantalla Hoy |
 | `10-copias.js` | Copias de seguridad, aviso de 14 días, pantalla Datos |
 | `11-eventos.js` | `V`, `render()`, listeners `click/input/change` (acciones `data-a`) |
-| `12-inicio.js` | Arranque (`applyUI(); render()`), almacenamiento persistente, service worker |
+| `12-inicio.js` | Arranque **asíncrono**: `Datos.iniciar()` → `Object.assign(st,…)` → `fixCases()` → `render()`; vaciado al ocultar la página; service worker |
 
 **Al añadir un archivo JS**: añadirlo a `index.html` (en su sitio del orden) y a `FILES` de `sw.js`. Las sentencias que se ejecutan al cargar (p. ej. `fixCases()`, `ZN.forEach`, `Object.assign(PO,…)`) dependen del orden; las funciones y constantes que solo se usan dentro de funciones pueden estar en cualquier archivo anterior a `12-inicio.js`.
 
 ## Arquitectura (resumen; buscar por nombre, los números de línea cambian)
 - JavaScript sin framework, sin módulos ni compilación (`js/*.js`). Vistas = funciones que devuelven HTML en plantillas y se pintan con `innerHTML`.
 - `render()` → `V[tab]()`; pestañas: `hoy, lib, rut, sem, cli, fis, grp, dat`.
-- Estado global `st`; `save()` guarda **todo** `st` en localStorage. Preferencias visuales en `ui` (`plan_ui`), aplicadas con `applyUI()` (atributos `data-style` y `data-mode` en `<html>`).
+- Estado global `st` en memoria (la interfaz lo modifica directamente y llama a `save()`). `save()` no escribe a mano: avisa a `Datos`, que a los 150 ms compara `st` con lo ya guardado y escribe **solo los registros que cambiaron**. Preferencias visuales en `ui` (`plan_ui`), aplicadas con `applyUI()` (atributos `data-style` y `data-mode` en `<html>`).
 - Eventos: 3 listeners delegados (`click`, `input`, `change`). Cada botón lleva `data-a="acción"`; el manejador es una cadena larga de `else if(a=='…')`. Hay ~70 acciones.
 - Biblioteca: `LIB` (909 ejercicios: 876 de free-exercise-db + 33 semillas en español), `all()`, `byId()`, personalizados en `st.custom`, ediciones en `st.ov`.
 - Ilustraciones: dibujos SVG de figura de palitos generados por código (`PO`, `PF`, `AR`, `pic`…), animados con CSS.
 - Fisioterapia: `ZN` (52 zonas del cuerpo), `bodyChart(f)`, `sev()`/`sevLevel()` (gravedad por días de baja), `grpReport(g)` (informe de grupo).
 - PDFs: `buildPDF`, `buildGroupPDF`, `pdfSave` (en iOS usa la hoja de compartir; si no, descarga).
-- Copias: `expFile` / `exp` (exportar), `imp` y `#impf` (importar), aviso a los 14 días (`bkBanner`).
+- Copias: `expFile` / `exp` (exportar `st` como JSON), `imp` y `#impf` (importar: sustituye todo; lo que falte queda como lápida), aviso a los 14 días (`bkBanner`).
+- Avisos fijos en rojo `#saveerr` (`avisoGuardado`, en `10-copias.js`): fallo al guardar (desaparece al guardar bien) o datos dañados/antiguos ilegibles (permanece).
 
 ## Modelo de datos (`st`)
 ```
@@ -72,23 +74,35 @@ st = { custom:[], routines:[{id,name,items:[{e,sets,reps,hold,rest,load,note}]}]
 ```
 Las lesiones (`cases`) cuelgan del deportista; los grupos solo guardan ids de deportistas. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
 
-## Almacenamiento futuro (pendiente de decidir con el usuario)
-Hoy: solo `localStorage` del dispositivo (sin nube, sin sincronización entre iPhone e iPad). Opciones a valorar cuando toque: (a) seguir en local + copias de seguridad a archivo guardadas en iCloud/Archivos; (b) base de datos en la nube con inicio de sesión (sincroniza dispositivos, pero son datos de salud: RGPD, servidor en la UE, cifrado, consentimiento; no es asesoramiento legal). Mantener el acceso a datos centralizado (`save()` y la carga inicial en `01-base.js`) para que cambiar de sistema sea fácil.
+## Almacenamiento y sincronización
+**Decisiones del usuario (25/11/2026):** quiere los mismos datos en iPhone, iPad y ordenador (Windows con Opera); cada dispositivo guarda una **copia completa** local (funciona sin internet) y un sitio en la nube hace de punto de encuentro; solo texto y datos (sin fotos ni vídeos por ahora); usa apodos, no nombres reales. Supabase (UE) propuesto como punto de encuentro, **sin decidir**. Plan Pro de Supabase 25 $/mes no se pausa; el gratuito se pausa tras 1 semana sin actividad.
+
+**Hecho (fase A, local):** `js/00-datos.js`.
+- IndexedDB `fisio-os` v1: almacén `registros` (clave `k = tipo/id`) y `meta` (`deviceId`, `esquema`, `sel`).
+- `st` (anidado) se aplana en registros `{k,id,kind,parent,ord,data,updatedAt,deletedAt}`. Tipos: `client, plan, week, case, entry, routine, group, exercise, override, ajuste` (`ajuste/semana` = tablero semanal `st.week`; `ajuste/resto` = campos sueltos desconocidos). `parent` = id del padre (cliente para plan/week/case, lesión para entry); `ord` = posición en su lista.
+- Borrar = **lápida** (`deletedAt` + `data:null`), no se elimina el registro: así el borrado se podrá sincronizar.
+- Selecciones de este dispositivo (`active, gsel, cc, fcase`) van en `meta.sel` y **no** se sincronizarán. Preferencias visuales (`plan_ui`) y fecha de copia (`plan_bk`) siguen en localStorage (por dispositivo).
+- Nunca se borran solos los registros que no se pudieron cargar (dañados u huérfanos): quedan `retenido`.
+- `uid(prefijo)` genera ids únicos entre dispositivos (úsalo siempre; nunca `Date.now()` solo).
+- Migración: al primer arranque, si IndexedDB está vacía y hay `plan_v1` en localStorage, se importa y se marca `plan_v1_migrado`; la copia antigua **no se borra**.
+- `Datos.registros(desde)` devuelve los registros (con lápidas) modificados después de `desde`: es la base de la sincronización.
+
+**Pendiente (fase B, sincronización):** elegir y crear el servicio en la nube (UE) con inicio de sesión; tabla genérica de registros con las mismas columnas; subir los cambios locales (`updatedAt > último envío`), bajar los remotos y aplicarlos (el más reciente gana, por registro); descarga completa al abrir en un dispositivo nuevo; limpiar lápidas antiguas ya sincronizadas; relojes: usa la hora del dispositivo, vigilar desajustes; instalar la app en el ordenador (Opera: comprobar). Ya hay un hueco para ello: no hace falta tocar el resto de la app. Antes del lanzamiento: RGPD (datos de salud aunque sean apodos), copia de seguridad en la nube, y decidir qué pasa si falla el servicio (la app debe seguir funcionando en local).
 
 ## Problemas conocidos (no arreglar de pasada: pedir confirmación)
 Detalle y gravedad en la auditoría (sección 13). Los más importantes:
-- `save()` ignora en silencio un fallo de escritura (almacenamiento lleno/bloqueado): el usuario cree que guardó y no.
-- Si el JSON guardado está corrupto, la app arranca vacía y el siguiente `save()` lo **sobrescribe**.
+- (Resueltos con la capa de datos: fallo de escritura silencioso y sobrescritura de datos corruptos; ahora hay aviso rojo y los registros dañados se conservan.)
 - Importar una copia **sustituye todo sin pedir confirmación**.
 - El botón "Cambiar tema" escribe `data-theme`, que ningún CSS lee: no hace nada (regresión del rediseño).
 - `today()` usa `toISOString()` (UTC): cerca de medianoche puede dar el día anterior/siguiente.
 - Editar una anotación clínica solo permite cambiar texto y fecha; añadir una exige texto o medida.
-- Borrar una rutina deja su id huérfano en `st.week`.
+- Borrar una rutina deja su id huérfano en `st.week`; borrar un deportista lo deja en `members` de los grupos (el informe lo ignora).
 - Todo comparte el ámbito global (nombres de variables y funciones): al añadir algo, comprobar que el nombre no existe ya (`grep`). Cambios pequeños y probados.
 
 ## Pruebas
-- `npm install` (una vez) y `npm test`. Usan jsdom con datos ficticios; salen con código distinto de 0 si algo falla.
+- `npm install` (una vez) y `npm test`. Usan jsdom y `fake-indexeddb` con datos ficticios; salen con código distinto de 0 si algo falla.
 - `tests/version.js`: `APPV` == versión de `sw.js`, los archivos precargados y los iconos del manifest existen.
+- `tests/datos.js`: migración desde localStorage, guardar solo lo cambiado, reabrir, lápidas, orden, ids repetidos, registros dañados/huérfanos, fallo de escritura y reintento, dispositivo nuevo (usa `fake-indexeddb`).
 - `tests/smoke.js`: carga sin errores, las 8 pestañas pintan, 3 estilos, mapa corporal, biblioteca, fisio/grupos.
 - `tests/flows.js`: asignar semana, lesión → anotación → resumen → alta → reabrir, 3 PDFs, exportar/importar copia.
 - Los "CONOCIDO" que imprime no fallan la suite; cuando se arregle uno aparecerá como "RESUELTO": actualizar la lista de arriba.
