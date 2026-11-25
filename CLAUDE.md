@@ -8,7 +8,12 @@ Basado en la auditoría técnica del 24/11/2026. Si algo de aquí contradice el 
 - Usuario: un único fisioterapeuta/preparador que trabaja solo, en **iPhone y iPad** (Safari, instalada como PWA). Interfaz y textos en **español**; los nombres de ejercicios pueden quedar en inglés.
 - Sin servidor, sin cuentas, sin sincronización entre dispositivos. Los datos viven **solo en el navegador del dispositivo** (localStorage).
 
-## Regla nº 1: los datos del usuario son lo más valioso
+## Fase actual: desarrollo, sin datos reales
+- Decisión del usuario (25/11/2026): la app **no tiene datos reales** y seguirá así hasta tener el producto final, para no estar exportando/importando en cada cambio. No hace falta pedirle copias de seguridad al publicar mientras siga en esta fase.
+- Por eso ahora es el momento más barato de cambiar el modelo de datos o el almacenamiento (no hay nada que migrar). **Antes del lanzamiento** hay que decidir dónde se guardan los datos reales (ver "Almacenamiento futuro") y, a partir de que existan datos reales, aplica la regla nº 1 al pie de la letra.
+- Hablar de datos reales (dónde guardarlos, copias, privacidad) está **pendiente**: el usuario lo retomará cuando toque.
+
+## Regla nº 1: los datos del usuario son lo más valioso (obligatoria en cuanto haya datos reales)
 - Nunca cambiar la forma de `st` ni las claves de localStorage (`plan_v1`, `plan_ui`, `plan_bk`) sin una migración que conserve los datos existentes y sin probarla.
 - Cualquier cambio que borre, sobrescriba o importe datos debe pedir confirmación al usuario y ser reversible o ir precedido de una copia.
 - **Este repositorio es público.** No subir nunca datos reales de deportistas o pacientes, ni copias de seguridad (`Planificador_copia_*.json`). Las pruebas usan datos ficticios (`tests/demo.js`).
@@ -67,6 +72,9 @@ st = { custom:[], routines:[{id,name,items:[{e,sets,reps,hold,rest,load,note}]}]
 ```
 Las lesiones (`cases`) cuelgan del deportista; los grupos solo guardan ids de deportistas. No hay registro de entrenamientos **ejecutados** (solo planificados) ni exposición en horas (decisión del usuario).
 
+## Almacenamiento futuro (pendiente de decidir con el usuario)
+Hoy: solo `localStorage` del dispositivo (sin nube, sin sincronización entre iPhone e iPad). Opciones a valorar cuando toque: (a) seguir en local + copias de seguridad a archivo guardadas en iCloud/Archivos; (b) base de datos en la nube con inicio de sesión (sincroniza dispositivos, pero son datos de salud: RGPD, servidor en la UE, cifrado, consentimiento; no es asesoramiento legal). Mantener el acceso a datos centralizado (`save()` y la carga inicial en `01-base.js`) para que cambiar de sistema sea fácil.
+
 ## Problemas conocidos (no arreglar de pasada: pedir confirmación)
 Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - `save()` ignora en silencio un fallo de escritura (almacenamiento lleno/bloqueado): el usuario cree que guardó y no.
@@ -92,4 +100,4 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - Estadísticas descriptivas sin nombres, salvo que haga falta. Él anonimiza los nombres de deportistas.
 - Prioridad: conservar y mejorar lo que ya funciona; nada de reescribir todo sin justificación técnica.
 - La marca/identidad visual está aplazada: no proponerla sin que la pida.
-- Tras cambiar algo: `npm test`, subir versión (`APPV` + `sw.js`), y decir al usuario qué archivos subir y que haga una copia antes.
+- Tras cambiar algo: `npm test` y subir versión (`APPV` + `sw.js`). Cuando haya datos reales: avisar al usuario de que haga una copia antes de publicar.
