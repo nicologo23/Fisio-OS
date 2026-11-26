@@ -293,3 +293,23 @@ button.plink{min-height:0;padding:0;background:transparent;color:var(--ac);font-
 .prnote{font-size:12.5px;margin:8px 2px 0}
 .prdet{margin-top:10px}.prdet summary{cursor:pointer;font-weight:600;padding:6px 0}
 .prtb{width:100%;border-collapse:collapse;font-size:13.5px}.prtb th,.prtb td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd)}.prtb th{color:var(--mut);font-weight:600}
+/* Progreso: lesión de referencia, ejes y leyendas */
+.prles{margin:2px 0 10px}.prles select{width:100%}
+.praxl{display:flex;flex-direction:column;gap:2px;margin:12px 0 2px;font-size:13px}.praxl .prlg{display:block;font-weight:500}.praxl b{font-weight:700}
+.prsvg .prm{cursor:pointer}.prsvg .prytit{font-size:11px}
+.prexc{margin-top:8px}
+.prprompt{margin:12px 0 0}
+/* Edición de rutinas y planes asignados */
+.aed{border:2px solid var(--ac)}
+.aed .aecab{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+.aed .lb{margin:8px 0 0}.aed .lb input{width:100%}
+.aed .aenote{font-size:12.5px;margin:8px 2px 0}
+.aed .aedays{margin:12px 0 4px}.aed .aedays button{padding:0 8px;min-width:0}.aed .aedays button.has:not(.on){font-weight:700;color:var(--ac)}
+.aed .aedh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;flex-wrap:wrap}
+.aed .item{margin:8px 0}
+.aepick{margin-top:10px;background:var(--fill)}
+.aepick input{width:100%;margin:8px 0}
+.aeres{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow:auto}
+.aepi{text-align:left;justify-content:flex-start;min-height:40px;padding:6px 12px;background:var(--card);border-radius:10px;font-weight:500}
+.aebar{margin-top:14px}
+.ws{min-width:150px}

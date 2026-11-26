@@ -5,7 +5,8 @@ document.addEventListener('click',ev=>{if(!ev.target.closest('.cbx'))cbxCerrar()
 if(a=='tab'){tab=b.dataset.k;masOn=false;if(tab=='cli'){pdet=false;pcol=false;ptab='res';pedit=false}if(tab=='fis')fcol=false;showTxt='';fsum='';delArm=null;render();return}
 if(a=='mas'){masOn=!masOn;nav();return}
 if(a=='masx'){masOn=false;nav();return}
-if(a=='toR')addToR(b.dataset.id);
+if(a.slice(0,2)=='ae'&&aeAccion(a,b)){}
+else if(a=='toR')addToR(b.dataset.id);
 else if(a=='addex'){const n=$('#nn').value.trim();if(!n)return;st.custom.push({id:uid('c'),g:$('#ng').value,f:$('#nf').value,a:[...$('#na').selectedOptions].map(o=>+o.value),c:CAT.filter((q,i)=>$('#nc'+i)&&$('#nc'+i).checked),j:$('#njp')&&$('#njp').checked?['Pie']:[],n,e:$('#ne').value.trim()});save();render();flash('Ejercicio creado')}
 else if(a=='tt'||a=='tj'){const A=a=='tt'?ft:fj,v=b.dataset.v,k=A.indexOf(v);k<0?A.push(v):A.splice(k,1);lim=60;$('#chips').innerHTML=chips();list()}
 else if(a=='clr'){ft=[];fj=[];lim=60;$('#chips').innerHTML=chips();list()}
@@ -70,7 +71,7 @@ else if(a=='pdfx'){pdfX()}
 else if(a=='updgo'){location.reload()}
 else if(a.slice(0,2)=='sy'){Sync.accion(a,b)}
 else if(a=='newweek'){const has=Object.values(st.week).some(Boolean);if(has&&delArm!='week'){delArm='week';render();return}st.week={};delArm=null;save();render();flash('Semana nueva')}
-else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').value):cc();if(!c){flash('Elige un paciente');return}const sn=weekSnap();if(!sn.some(d=>d.name)){flash('La semana está vacía');return}const nm=a=='aw'?$('#wn').value.trim():'';cw(c).unshift({id:uid('w'),date:today(),name:nm||'Semana del '+today(),note:'',days:sn});st.week={};delArm=null;save();flash('Semana asignada a '+c.name+' y semana vaciada');render()}
+else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').value):cc();if(!c){flash('Elige un paciente');return}const sn=weekSnap();if(!sn.some(d=>d.name)){flash('La semana está vacía');return}const nm=a=='aw'?$('#wn').value.trim():'';cw(c).unshift({id:uid('w'),date:today(),name:nm||'Semana del '+today(),note:'',start:wsVal(),days:sn});st.week={};wsStart='';delArm=null;save();flash('Semana asignada a '+c.name+' y semana vaciada');render()}
 else if(a=='wdel'){cw(cc()).splice(i,1);showTxt='';save();render()}
 else if(a=='wcopy'){const w=cw(cc())[i];w.days.forEach((d,k)=>{if(!d.name){delete st.week[k];return}const j=JSON.stringify(d.items);let r=st.routines.find(x=>x.name==d.name&&JSON.stringify(x.items)==j);if(!r){r={id:uid('r'),name:d.name,items:JSON.parse(j)};st.routines.push(r)}st.week[k]=r.id});save();flash('Copiada a Semana')}
 else if(a=='wtxt'||a=='ptxt'){const key=(a=='wtxt'?'w':'p')+i;showTxt=showTxt==key?'':key;render();setTimeout(()=>{const t=$('#txtbox');if(t){t.focus();t.select()}},0)}
@@ -88,7 +89,8 @@ else if(a=='dn'&&i<r.items.length-1){[r.items[i+1],r.items[i]]=[r.items[i],r.ite
 else if(a=='exp'){if(!confirm(CONF_EXP))return;bkTouch();$('#bk').value=JSON.stringify(st);$('#bk').select();flash('Copia generada')}
 else if(a=='imp'){try{const d=JSON.parse($('#bk').value);if(!d||!Array.isArray(d.routines))throw 0;if(!confirm(CONF_IMP)){flash('Importación cancelada: no se ha cambiado nada');return}st=Object.assign({custom:[],routines:[],week:{},active:null,clients:[],cc:null,ov:{},groups:[]},d);fixCases();save();flash('Importado')}catch(e){flash('JSON no válido')}}
 else if(a=='theme'){const h=document.documentElement;const dark=h.dataset.theme?h.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;h.dataset.theme=dark?'light':'dark'}});
-document.addEventListener('input',ev=>{const t=ev.target;
+document.addEventListener('input',ev=>{const t=ev.target;if(aeInput(t))return;
+if(t.id=='ws'){wsStart=t.value;return}
 if(t.id=='q'){fq=t.value;lim=60;list()}
 else if(t.id=='psq'){psq=t.value;paPintar()}
 else if(t.id=='cbirth'){const c=cc();if(c){const v=t.value,ok=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>='1900-01-01'&&v<=today();if(ok)c.birth=v;else delete c.birth;save();paFichaPintar();const e=$('#cedad');if(e)e.textContent=paEdad(c)}}
@@ -108,7 +110,9 @@ else if(t.dataset.wn!==undefined){cw(cc())[+t.dataset.wn].note=t.value;save()}
 else if(t.dataset.pn!==undefined){cc().plans[+t.dataset.pn].note=t.value;save()}
 else if(t.id=='rn'){cur().name=t.value;save()}
 else if(t.dataset.f){cur().items[+t.dataset.i][t.dataset.f]=t.value;save()}});
-document.addEventListener('change',ev=>{const t=ev.target;
+document.addEventListener('change',ev=>{const t=ev.target;if(aeInput(t)){if(t.id=='aef')render();return}
+if(t.id=='ws'){wsStart=t.value;return}
+if(t.id=='prles'){prg.les=t.value;prPintar();return}
 if(t.id=='pry'){prg.k=t.value;prg.d='';prPintar();return}
 if(t.id=='pryd'){prg.d=t.value;prPintar();return}
 if(t.id=='prx'){prg.xk=t.value;prg.xd='';prPintar();return}
