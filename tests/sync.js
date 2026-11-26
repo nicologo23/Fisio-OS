@@ -124,8 +124,8 @@ function crearNube() {
   { const ii = A.w.eval('Sync.indicador()'); T('indicador: permiso caducado → ✗ roja y pide atención', ii.k == 'err' && ii.aten && /reconectar/i.test(ii.texto)); }
   T('permiso caducado: la app sigue guardando en local', pend(A) == 1 && C0(A).notes == 'con permiso caducado');
   A.tab('hoy');
-  const barra = A.d.getElementById('syncb');
-  T('permiso caducado: aviso visible con botón Reconectar', !barra.hidden && /Falta el permiso/.test(barra.textContent) && !!barra.querySelector('[data-a=syconn]'));
+  T('permiso caducado: ya no hay tarjeta de aviso en la pantalla', !A.d.getElementById('syncb') && !A.d.querySelector('#app [data-a=syconn]'));
+  T('permiso caducado: globito rojo en «Más» y en Ajustes', A.d.querySelector('#tabbar [data-a=mas]').classList.contains('av') && A.d.querySelector('#nav .nv-foot button[data-k=dat]').classList.contains('av'));
   A.tab('dat');
   T('permiso caducado: la pantalla Datos lo explica y muestra pendientes', /Falta el permiso/.test(A.d.getElementById('sy-est').textContent) && /1 cambio sin enviar/.test(A.d.getElementById('sy-pend').textContent));
   nube.caducado = false;
@@ -143,7 +143,7 @@ function crearNube() {
   const cfA = A.S().conflicts;
   T('conflicto: A conserva la versión más reciente (B)', C0(A).notes == 'versión de B');
   T('conflicto: la versión perdedora queda guardada', cfA.length == 1 && cfA[0].kind == 'client' && cfA[0].data.notes == 'versión de A');
-  T('conflicto: se avisa en pantalla', est(A).res.conflictos == 1 && (A.tab('hoy'), /conflicto/.test(A.d.getElementById('syncb').textContent)));
+  T('conflicto: se avisa en pantalla', est(A).res.conflictos == 1 && (A.tab('hoy'), A.d.querySelector('#tabbar [data-a=mas]').classList.contains('av') && /conflicto/.test(A.w.eval('Sync.indicador().texto'))));
   await sync(A); await sync(B);
   T('conflicto: B llega al mismo estado y ve el mismo conflicto', norm(A.S()) == norm(B.S()) && B.S().conflicts.length == 1 && B.S().conflicts[0].id == cfA[0].id);
   const e1 = nube.escrituras; await sync(A); await sync(B); await sync(A);
@@ -232,12 +232,12 @@ function crearNube() {
   const ll = nube.llamadas.length; await edit(A, "st.clients[0].notes='sin nube';save()"); await sync(A);
   T('desconectado: no llama a Google', nube.llamadas.length == ll && C0(A).notes == 'sin nube');
   { const ii = A.w.eval('Sync.indicador()'); T('indicador: desconectado → neutro «Sin sincronizar»', ii.k == 'off' && !ii.aten); }
-  T('desconectado: la barra de estado está oculta', A.d.getElementById('syncb').hidden);
+  T('desconectado: sin globito rojo', !A.d.querySelector('#tabbar [data-a=mas]').classList.contains('av'));
 
   // 16. Pantalla Datos sin configurar: pide el ID y lo valida; ningún token ni ID viaja en el código
   const idbD = new IDBFactory(); let Dv = open({ idb: idbD, wait: 300, seed: false, before: w => nube.instalar(w) }); await Dv.ready();
   Dv.tab('dat');
-  T('sin configurar: la tarjeta pide el ID de cliente', /Sincronización entre dispositivos/.test(Dv.d.body.textContent) && !!Dv.d.getElementById('sycid') && Dv.d.getElementById('syncb').hidden);
+  T('sin configurar: la tarjeta pide el ID de cliente', /Sincronización entre dispositivos/.test(Dv.d.body.textContent) && !!Dv.d.getElementById('sycid') && !Dv.d.querySelector('#tabbar [data-a=mas]').classList.contains('av'));
   Dv.set('#sycid', 'esto no vale'); Dv.clk('[data-a=sycid]');
   T('ID mal formado: se rechaza', !Dv.w.localStorage.getItem('plan_cid'));
   Dv.set('#sycid', CID); Dv.clk('[data-a=sycid]');

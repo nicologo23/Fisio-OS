@@ -12,7 +12,7 @@ const TABS=[['hoy','Hoy','home'],['cli','Pacientes','users'],['fis','Fisioterapi
 const NAV_MAIN=['hoy','cli','fis','grp'],NAV_TOOLS=['lib','rut','sem'],NAV_MAS=['lib','rut','sem','dat'];
 let masOn=false;   // panel «Más» abierto (solo móvil)
 const tabInfo=k=>TABS.find(x=>x[0]==k)||[k,'',''];
-const navBtn=(k,sz)=>{const[,l,i]=tabInfo(k);return`<button data-a="tab" data-k="${k}" class="${k==tab?'on':''}"${k==tab?' aria-current="page"':''}>${ic(i,sz)}<span>${l}</span></button>`};
+const navBtn=(k,sz)=>{const[,l,i]=tabInfo(k);return`<button data-a="tab" data-k="${k}" class="${k==tab?'on':''}"${k==tab?' aria-current="page"':''}>${k=='dat'?`<span class="nvi">${ic(i,sz)}<i class="dot" aria-hidden="true"></i></span>`:ic(i,sz)}<span>${l}</span></button>`};   // en Ajustes: globito rojo si hace falta actuar
 // Estado (sincronización + aviso de copia) que se ve en tres sitios: bajo el engranaje (móvil), abajo del menú lateral y dentro de «Más».
 function estadoHTML(donde){const ind=Sync.indicador(),bk=bkEstado();
   const fila=(k,ico,t)=>`<span class="stl ${k}"><span class="st ${k}">${ic(ico,donde=='hdr'?16:18)}</span><span class="st-t">${esc(t)}</span></span>`;
@@ -20,7 +20,9 @@ function estadoHTML(donde){const ind=Sync.indicador(),bk=bkEstado();
 function estadoPintar(){
   document.querySelectorAll('[data-st]').forEach(e=>{const d=e.dataset.st,ind=Sync.indicador(),bk=bkEstado();
     e.innerHTML=estadoHTML(d);e.title=ind.texto+(bk?' · '+bk:'');e.setAttribute('aria-label','Estado: '+ind.texto+(bk?'. '+bk:''))});
-  const m=document.querySelector('#tabbar [data-a=mas]');if(m){const r=Sync.indicador().aten||!!bkEstado();m.classList.toggle('av',r)}}
+  const r=Sync.indicador().aten||!!bkEstado();   // algo requiere acción → globito rojo (Más en iPhone, Ajustes en menú lateral y panel «Más»)
+  const m=document.querySelector('#tabbar [data-a=mas]');if(m)m.classList.toggle('av',r);
+  document.querySelectorAll('button[data-k=dat]').forEach(x=>{if(!x.querySelector('.dot'))return;x.classList.toggle('av',r);x.setAttribute('aria-label',r?'Ajustes: requiere atención':'Ajustes')})}
 function nav(){
   $('#nav').innerHTML=`<div class="nv-main">${NAV_MAIN.map(k=>navBtn(k,22)).join('')}</div><div class="nv-sep" role="separator"><span>Herramientas</span></div><div class="nv-tools">${NAV_TOOLS.map(k=>navBtn(k,22)).join('')}</div><div class="nv-foot">${navBtn('dat',22)}<button class="nv-st" data-a="tab" data-k="dat" data-st="lado"></button></div>`;
   $('#tabbar').innerHTML=NAV_MAIN.map(k=>navBtn(k,24)).join('')+`<button data-a="mas" class="${NAV_MAS.includes(tab)||masOn?'on':''}" aria-haspopup="dialog" aria-expanded="${masOn}">${ic('more',24)}<span>Más</span><i class="dot" aria-hidden="true"></i></button>`;

@@ -64,13 +64,20 @@ H.run(async ({ w, d, clk, tab, app, T, errs, S }) => {
     T('estado «' + t + '»: símbolo en el encabezado y en el lateral', ['hdr', 'lado'].every(z => !!d.querySelector(`[data-st=${z}] .st.${k} svg`) && new RegExp(t.replace('…', '.')).test(d.querySelector(`[data-st=${z}]`).textContent)));
     T('estado «' + t + '»: el símbolo está debajo del engranaje', d.querySelector('.hr').children[0].classList.contains('gear') && d.querySelector('.hr').children[1].dataset.st == 'hdr');
   }
+  { const css = require('fs').readFileSync(__dirname + '/../css/app.css', 'utf8');
+    T('menú lateral fijo a la pantalla (no se mueve al desplazar)', /#nav\{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;top:0;bottom:0/.test(css) && !/#nav\{[^}]*position:sticky/.test(css));
+    T('barra inferior: pestaña activa con fondo resaltado', /#tabbar button\.on\{color:var\(--ac\);background:var\(--fill\)\}/.test(css)); }
   clk('#tabbar [data-a=mas]');
   T('«Más» también muestra el estado', !!d.querySelector('#mas [data-st=mas] .st.off svg') || !!d.querySelector('#mas [data-st=mas] .st svg'));
   clk('#mas [data-a=masx]');
   ver('err', 'err', 'Falta reconectar con Google', true);
   T('si hay algo que atender, «Más» muestra un punto', d.querySelector('#tabbar [data-a=mas]').classList.contains('av'));
+  T('si hay algo que atender, Ajustes del menú lateral muestra el globito rojo', d.querySelector('#nav .nv-foot button[data-k=dat]').classList.contains('av') && !!d.querySelector('#nav .nv-foot button[data-k=dat] .nvi .dot') && /atención/.test(d.querySelector('#nav .nv-foot button[data-k=dat]').getAttribute('aria-label')));
+  T('y no hay tarjeta de aviso en ninguna pantalla', !d.getElementById('syncb') && !/Reconectar/.test(app()));
+  clk('#tabbar [data-a=mas]'); T('en el panel «Más», Ajustes también lleva el globito', d.querySelector('#mas button[data-k=dat]').classList.contains('av')); clk('#mas [data-a=masx]');
   ver('ok', 'ok', 'Sincronizado', false);
   T('sin nada que atender, no hay punto en «Más»', !d.querySelector('#tabbar [data-a=mas]').classList.contains('av'));
+  T('sin nada que atender, Ajustes del menú lateral no tiene globito', !d.querySelector('#nav .nv-foot button[data-k=dat]').classList.contains('av') && d.querySelector('#nav .nv-foot button[data-k=dat]').getAttribute('aria-label') == 'Ajustes');
   clk('[data-st=lado]');
   T('pulsar el estado lleva a Ajustes', w.eval('tab') == 'dat');
 
@@ -80,6 +87,7 @@ H.run(async ({ w, d, clk, tab, app, T, errs, S }) => {
   T('sin copia: el aviso sale en el área de estado con ⚠', /Aún no has guardado ninguna copia/.test(d.querySelector('[data-st=lado]').textContent) && !!d.querySelector('[data-st=lado] .st.warn svg') && !!d.querySelector('[data-st=hdr] .st.warn svg'));
   T('sin copia: ya no sale la tarjeta arriba de la pantalla', !tarjeta());
   T('sin copia: «Más» muestra un punto', d.querySelector('#tabbar [data-a=mas]').classList.contains('av'));
+  T('sin copia: Ajustes del menú lateral muestra el globito', d.querySelector('#nav .nv-foot button[data-k=dat]').classList.contains('av'));
   w.localStorage.setItem('plan_bk', new Date(Date.now() - 20 * 864e5).toISOString().slice(0, 10)); tab('cli');
   T('copia antigua: «Hace 20 días…»', /Hace 20 días/.test(d.querySelector('[data-st=lado]').textContent));
   w.localStorage.setItem('plan_bk', new Date().toISOString().slice(0, 10)); tab('hoy');

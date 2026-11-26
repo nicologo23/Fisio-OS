@@ -37,14 +37,6 @@ const Sync=(()=>{
     return{k:'ok',icono:'ok',texto:'Sincronizado',aten:false}}
 
   function pintar(){
-    const b=document.getElementById('syncb');
-    if(b){
-      if(!activo()||tab=='dat'||!(S.estado=='sin-permiso'||S.estado=='error'||nConf()>0)){b.hidden=true;b.innerHTML=''}
-      else{
-        const aten=S.estado=='sin-permiso'||S.estado=='error'||nConf()>0;
-        b.hidden=false;b.className=aten?'syncb aten':'syncb';
-        const btn=S.estado=='sin-permiso'?'<button class="pri" data-a="syconn">Reconectar</button>':S.estado=='error'?'<button data-a="synow">Reintentar</button>':nConf()?'<button data-a="tab" data-k="dat">Revisar</button>':'';
-        b.innerHTML='<span style="flex:1;min-width:150px">'+esc(textoEstado())+' · '+esc(textoPend())+(nConf()?' · '+nConf()+(nConf()==1?' conflicto por revisar':' conflictos por revisar'):'')+'</span>'+btn}}
     if(typeof estadoPintar=='function')estadoPintar();
     const e=document.getElementById('sy-est');if(e)e.textContent=textoEstado();
     const p=document.getElementById('sy-pend');if(p)p.textContent=textoPend()}
