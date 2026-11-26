@@ -45,7 +45,7 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 | `05-fisioterapia.js` | Lesiones (`fis`, `fdet`), mapa corporal (`ZN`, `bodyChart`), severidad (`sev`), recaídas, resumen |
 | `06-pdf.js` | `buildPDF`, `buildGroupPDF`, `pdfSave` y compartir/descargar |
 | `07-grupos.js` | `grpReport` (cálculo), `grpView`, `grp()` |
-| `08-aspecto.js` | `ui`, `applyUI`, iconos, `nav()`, ajustes de aspecto |
+| `08-aspecto.js` | `ui`, `applyUI`, iconos, **navegación** (`TABS`, `NAV_MAIN/NAV_TOOLS/NAV_MAS`, `nav()`, `estadoPintar()`, panel «Más» con `masOn`), ajustes de aspecto |
 | `09-hoy.js` | Pantalla Hoy |
 | `10-copias.js` | Copias de seguridad, aviso de 14 días, pantalla Datos |
 | `11-eventos.js` | `V`, `render()`, listeners `click/input/change` (acciones `data-a`) |
@@ -58,13 +58,14 @@ Orden de carga (scripts clásicos, sin módulos; comparten el ámbito global, as
 ## Arquitectura (resumen; buscar por nombre, los números de línea cambian)
 - JavaScript sin framework, sin módulos ni compilación (`js/*.js`). Vistas = funciones que devuelven HTML en plantillas y se pintan con `innerHTML`.
 - `render()` → `V[tab]()`; pestañas: `hoy, lib, rut, sem, cli, fis, grp, dat`.
+- **Navegación (26/11/2026):** barra inferior Hoy · Pacientes · Fisioterapia · Grupos · Más (Más = Biblioteca, Rutinas, Semana, Ajustes); menú lateral (≥820 px) con los 4 principales, separador «Herramientas» (Biblioteca, Rutinas, Semana) y Ajustes abajo. Cada pantalla es independiente (ya no hay selectores Rutinas|Semana ni Lesiones|Grupos). Área de estado (`data-st`: encabezado bajo el engranaje, lateral y panel «Más»): símbolo de sincronización (`Sync.indicador()`: ✓ verde, flechas azules girando, ✗ roja sutil, neutro) y aviso de copia (⚠). La línea fina `#syncb` solo sale cuando hace falta actuar (reconectar, error, conflictos).
 - Estado global `st` en memoria (la interfaz lo modifica directamente y llama a `save()`). `save()` no escribe a mano: avisa a `Datos`, que a los 150 ms compara `st` con lo ya guardado y escribe **solo los registros que cambiaron**. Preferencias visuales en `ui` (`plan_ui`), aplicadas con `applyUI()` (atributos `data-style` y `data-mode` en `<html>`).
 - Eventos: 3 listeners delegados (`click`, `input`, `change`). Cada botón lleva `data-a="acción"`; el manejador es una cadena larga de `else if(a=='…')`. Hay ~70 acciones.
 - Biblioteca: `LIB` (909 ejercicios: 876 de free-exercise-db + 33 semillas en español), `all()`, `byId()`, personalizados en `st.custom`, ediciones en `st.ov`.
 - Ilustraciones: dibujos SVG de figura de palitos generados por código (`PO`, `PF`, `AR`, `pic`…), animados con CSS.
 - Fisioterapia: `ZN` (52 zonas del cuerpo), `bodyChart(f)`, `sev()`/`sevLevel()` (gravedad por días de baja), `grpReport(g)` (informe de grupo).
 - PDFs: `buildPDF`, `buildGroupPDF`, `pdfSave` (en iOS usa la hoja de compartir; si no, descarga).
-- Copias: `expFile` / `exp` (exportar `st` como JSON), `imp` y `#impf` (importar: sustituye todo, lo que falte queda como lápida; ambos avisan con `confirm()` antes: textos `CONF_EXP` / `CONF_IMP`), aviso a los 14 días (`bkBanner`).
+- Copias: `expFile` / `exp` (exportar `st` como JSON), `imp` y `#impf` (importar: sustituye todo, lo que falte queda como lápida; ambos avisan con `confirm()` antes: textos `CONF_EXP` / `CONF_IMP`), aviso a los 14 días (`bkEstado`, se muestra en el área de estado de la navegación).
 - Avisos fijos en rojo `#saveerr` (`avisoGuardado`, en `10-copias.js`): fallo al guardar (desaparece al guardar bien) o datos dañados/antiguos ilegibles (permanece).
 
 ## Modelo de datos (`st`)
@@ -109,6 +110,7 @@ Detalle y gravedad en la auditoría (sección 13). Los más importantes:
 - `tests/version.js`: `APPV` == versión de `sw.js`, los archivos precargados y los iconos del manifest existen.
 - `tests/datos.js`: migración desde localStorage y del esquema 1 al 2, versiones por registro, guardar solo lo cambiado, reabrir, lápidas, orden, ids repetidos, registros dañados/huérfanos, fallo de escritura y reintento, dispositivo nuevo (usa `fake-indexeddb`).
 - `tests/sync.js`: varios dispositivos simulados contra un Google Drive simulado (proveedor y motor reales): recuperación en dispositivo nuevo, sincronizar al abrir, offline, permiso caducado/reconectar, conflictos (conservar, usar, descartar), resolución independiente idéntica, editar vs borrar, reloj atrasado, archivos extraños, límite 429, desconectar, simulación al azar con 3 dispositivos (`SEMILLA=n npm test` para otra semilla).
+- `tests/nav.js`: barra, panel «Más», menú lateral, selección de cada pantalla, títulos, estado de sincronización y aviso de copia.
 - `tests/smoke.js`: carga sin errores, las 8 pestañas pintan, 3 estilos, mapa corporal, biblioteca, fisio/grupos.
 - Copias manuales (en `tests/datos.js` y `tests/sync.js`): la copia incluye todo, avisa antes de exportar e importar, importar sustituye todo y llega a los demás dispositivos.
 - `tests/flows.js`: asignar semana, lesión → anotación → resumen → alta → reabrir, 3 PDFs, exportar/importar copia.

@@ -24,15 +24,28 @@ const Sync=(()=>{
   const textoPend=()=>{const n=Datos.pendientes();return n?n+(n==1?' cambio sin enviar':' cambios sin enviar'):'Todo enviado'};
   const nConf=()=>(st.conflicts||[]).length;
 
+  // Símbolo + texto corto del estado para el área de estado de la navegación (k = clase de color; aten = pide atención).
+  function indicador(){
+    if(!prov||!prov.configurado()||!activado())return{k:'off',icono:'off',texto:'Sin sincronizar',aten:false};
+    const e=S.estado,n=Datos.pendientes();
+    if(e=='sin-permiso')return{k:'err',icono:'err',texto:'Falta reconectar con Google',aten:true};
+    if(e=='error')return{k:'err',icono:'err',texto:'Error al sincronizar',aten:true};
+    if(nConf())return{k:'warn',icono:'warn',texto:nConf()+(nConf()==1?' conflicto por revisar':' conflictos por revisar'),aten:true};
+    if(e=='sincronizando')return{k:'sync',icono:'sync',texto:'Sincronizando…',aten:false};
+    if(n)return{k:'pend',icono:'err',texto:n+(n==1?' cambio sin enviar':' cambios sin enviar'),aten:false};
+    if(e=='sin-conexion')return{k:'off',icono:'off',texto:'Sin conexión',aten:false};
+    return{k:'ok',icono:'ok',texto:'Sincronizado',aten:false}}
+
   function pintar(){
     const b=document.getElementById('syncb');
     if(b){
-      if(!activo()||tab=='dat'){b.hidden=true;b.innerHTML=''}
+      if(!activo()||tab=='dat'||!(S.estado=='sin-permiso'||S.estado=='error'||nConf()>0)){b.hidden=true;b.innerHTML=''}
       else{
         const aten=S.estado=='sin-permiso'||S.estado=='error'||nConf()>0;
         b.hidden=false;b.className=aten?'syncb aten':'syncb';
         const btn=S.estado=='sin-permiso'?'<button class="pri" data-a="syconn">Reconectar</button>':S.estado=='error'?'<button data-a="synow">Reintentar</button>':nConf()?'<button data-a="tab" data-k="dat">Revisar</button>':'';
         b.innerHTML='<span style="flex:1;min-width:150px">'+esc(textoEstado())+' · '+esc(textoPend())+(nConf()?' · '+nConf()+(nConf()==1?' conflicto por revisar':' conflictos por revisar'):'')+'</span>'+btn}}
+    if(typeof estadoPintar=='function')estadoPintar();
     const e=document.getElementById('sy-est');if(e)e.textContent=textoEstado();
     const p=document.getElementById('sy-pend');if(p)p.textContent=textoPend()}
   function fijar(e,err){S.estado=e;S.error=err||'';pintar()}
@@ -140,4 +153,4 @@ const Sync=(()=>{
     pintar();
     if(activo())pedir('inicio',300)}
 
-  return{registrar,iniciar,pedir,accion,tarjeta,pintar,ahora:correr,estado:()=>Object.assign({},S,{pendientes:Datos.pendientes(),texto:textoEstado()}),_ciclo:ciclo}})();
+  return{registrar,iniciar,pedir,accion,tarjeta,pintar,indicador,ahora:correr,estado:()=>Object.assign({},S,{pendientes:Datos.pendientes(),texto:textoEstado()}),_ciclo:ciclo}})();

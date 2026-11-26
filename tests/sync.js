@@ -121,6 +121,7 @@ function crearNube() {
   await edit(A, "st.clients[0].notes='con permiso caducado';save()");
   await sync(A);
   T('permiso caducado: estado "sin-permiso"', est(A).estado == 'sin-permiso' && !A.w.localStorage.getItem('plan_tok'));
+  { const ii = A.w.eval('Sync.indicador()'); T('indicador: permiso caducado → ✗ roja y pide atención', ii.k == 'err' && ii.aten && /reconectar/i.test(ii.texto)); }
   T('permiso caducado: la app sigue guardando en local', pend(A) == 1 && C0(A).notes == 'con permiso caducado');
   A.tab('hoy');
   const barra = A.d.getElementById('syncb');
@@ -129,6 +130,7 @@ function crearNube() {
   T('permiso caducado: la pantalla Datos lo explica y muestra pendientes', /Falta el permiso/.test(A.d.getElementById('sy-est').textContent) && /1 cambio sin enviar/.test(A.d.getElementById('sy-pend').textContent));
   nube.caducado = false;
   A.clk('[data-a=syconn]'); await pausa(120); await A.flush();
+  { const ii = A.w.eval('Sync.indicador()'); T('indicador: sincronizado → ✓ verde', ii.k == 'ok' && ii.texto == 'Sincronizado' && !ii.aten); }
   T('reconectar: vuelve a sincronizar y envía lo pendiente', est(A).estado == 'ok' && pend(A) == 0);
   await sync(B); T('reconectar: B recibe el cambio', C0(B).notes == 'con permiso caducado');
 
@@ -229,6 +231,7 @@ function crearNube() {
   T('desconectar: se desactiva, sin permiso guardado y con los datos intactos', !A.w.localStorage.getItem('plan_sync_on') && !A.w.localStorage.getItem('plan_tok') && est(A).estado == 'apagado' && A.S().clients.length >= 3);
   const ll = nube.llamadas.length; await edit(A, "st.clients[0].notes='sin nube';save()"); await sync(A);
   T('desconectado: no llama a Google', nube.llamadas.length == ll && C0(A).notes == 'sin nube');
+  { const ii = A.w.eval('Sync.indicador()'); T('indicador: desconectado → neutro «Sin sincronizar»', ii.k == 'off' && !ii.aten); }
   T('desconectado: la barra de estado está oculta', A.d.getElementById('syncb').hidden);
 
   // 16. Pantalla Datos sin configurar: pide el ID y lo valida; ningún token ni ID viaja en el código

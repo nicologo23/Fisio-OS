@@ -1,8 +1,10 @@
 // Pestañas, render() y manejo de eventos (click / input / change)
 const V={hoy,lib,rut,sem,cli,fis,grp,dat};
-function render(){nav();$('#app').innerHTML=bkBanner()+V[tab]();if(tab=='lib')list();document.body.dataset.tab=tab;Sync.pintar()}
+function render(){nav();$('#app').innerHTML=V[tab]();if(tab=='lib')list();document.body.dataset.tab=tab;Sync.pintar()}
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-a]');if(!b||b.tagName=='SELECT')return;const a=b.dataset.a,i=+b.dataset.i,r=cur();
-if(a=='tab'){tab=b.dataset.k;showTxt='';fsum='';delArm=null;render();return}
+if(a=='tab'){tab=b.dataset.k;masOn=false;showTxt='';fsum='';delArm=null;render();return}
+if(a=='mas'){masOn=!masOn;nav();return}
+if(a=='masx'){masOn=false;nav();return}
 if(a=='toR')addToR(b.dataset.id);
 else if(a=='addex'){const n=$('#nn').value.trim();if(!n)return;st.custom.push({id:uid('c'),g:$('#ng').value,f:$('#nf').value,a:[...$('#na').selectedOptions].map(o=>+o.value),c:CAT.filter((q,i)=>$('#nc'+i)&&$('#nc'+i).checked),j:$('#njp')&&$('#njp').checked?['Pie']:[],n,e:$('#ne').value.trim()});save();render();flash('Ejercicio creado')}
 else if(a=='tt'||a=='tj'){const A=a=='tt'?ft:fj,v=b.dataset.v,k=A.indexOf(v);k<0?A.push(v):A.splice(k,1);lim=60;$('#chips').innerHTML=chips();list()}
@@ -149,3 +151,4 @@ else if(t.dataset.a=='wk'){st.week[t.dataset.d]=t.value;delArm=null;save();rende
   if(ok&&to!=from){const r=cur();if(r&&r.items[from]){const[m]=r.items.splice(from,1);r.items.splice(to,0,m);save();render()}}};
  document.addEventListener('pointerup',()=>fin(true));
  document.addEventListener('pointercancel',()=>fin(false))})();
+document.addEventListener('keydown',ev=>{if(ev.key=='Escape'&&masOn){masOn=false;nav()}});
