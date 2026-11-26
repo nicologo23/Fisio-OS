@@ -2,7 +2,7 @@
 const V={hoy,lib,rut,sem,cli,fis,grp,dat};
 function render(){nav();$('#app').innerHTML=V[tab]();if(tab=='lib')list();document.body.dataset.tab=tab;Sync.pintar()}
 document.addEventListener('click',ev=>{if(!ev.target.closest('.cbx'))cbxCerrar();const b=ev.target.closest('[data-a]');if(!b||b.tagName=='SELECT')return;const a=b.dataset.a,i=+b.dataset.i,r=cur();
-if(a=='tab'){tab=b.dataset.k;masOn=false;if(tab=='cli'){pdet=false;pcol=false}showTxt='';fsum='';delArm=null;render();return}
+if(a=='tab'){tab=b.dataset.k;masOn=false;if(tab=='cli'){pdet=false;pcol=false;ptab='res';pedit=false}if(tab=='fis')fcol=false;showTxt='';fsum='';delArm=null;render();return}
 if(a=='mas'){masOn=!masOn;nav();return}
 if(a=='masx'){masOn=false;nav();return}
 if(a=='toR')addToR(b.dataset.id);
@@ -44,12 +44,18 @@ else if(a=='uit'){ui[b.dataset.u]=b.checked?1:0;saveUI();render()}
 else if(a=='qa'){const k=b.dataset.k;if(k=='nr'){const r={id:uid('r'),name:'Rutina '+(st.routines.length+1),items:[]};st.routines.push(r);st.active=r.id;save();tab='rut';render()}else{tab=k;if(k=='cli'){pdet=false;pnewOn=true}render();setTimeout(()=>{const i=$(k=='cli'?'#cn':'#fn');if(i)i.focus()},60)}}
 else if(a=='fichac'){st.cc=b.dataset.id;pdet=true;save();tab='cli';render()}
 else if(a=='fgo2'){st.cc=b.dataset.c;st.fcase=b.dataset.id;save();tab='fis';render()}
-else if(a=='selc'){st.cc=b.dataset.id;pdet=true;save();render();window.scrollTo(0,0)}
+else if(a=='selc'){st.cc=b.dataset.id;pdet=true;ptab='res';pedit=false;save();render();window.scrollTo(0,0)}
 else if(a=='pback'){pdet=false;render();window.scrollTo(0,0)}
 else if(a=='psx'){const c=cc();if(c){const v=b.dataset.v;if(v=='f'||v=='m')c.sex=v;else delete c.sex;save();render()}}
 else if(a=='spt'){const l=$('#csl');if(l&&!l.hidden)cbxCerrar();else cbxAbrir('')}
-else if(a=='spp'){const c=cc(),i=$('#csport');if(c&&i){c.sport=b.dataset.v;i.value=b.dataset.v;save();paPintar();cbxCerrar()}}
+else if(a=='spp'){const c=cc(),i=$('#csport');if(c&&i){c.sport=b.dataset.v;i.value=b.dataset.v;save();paFichaPintar();cbxCerrar()}}
 else if(a=='ptog'){pcol=!pcol;render()}
+else if(a=='ftog'){fcol=!fcol;render()}
+else if(a=='ptab'){ptab=b.dataset.v;render()}
+else if(a=='pedit'){pedit=b.dataset.v=='1'?true:!pedit;render();if(pedit){const e=$('.pdat');if(e)try{e.scrollIntoView({block:'nearest'})}catch(x){}}}
+else if(a=='pver'){const c=cc(),w=b.dataset.v=='w',id=b.dataset.id;if(!c)return;ptab='ej';render();const e=document.getElementById((w?'pw-':'pp-')+id);if(e){const d=e.querySelector('details');if(d)d.open=true;let t=e;if(w&&b.dataset.d){const dd=document.getElementById('pwd-'+id+'-'+b.dataset.d);if(dd){t=dd;dd.classList.add('hl')}}try{t.scrollIntoView({block:'start'})}catch(er){}}}
+else if(a=='pnl'){if(!cc())return;st.fcase=null;tab='fis';fsum='';delArm=null;save();render();const d=document.querySelector('.fisl .pane-l details');if(d){d.open=true;try{d.scrollIntoView({block:'center'})}catch(x){}}}
+else if(a=='pmed'){const c=cc();if(!c)return;const f=paActivas(c)[0]||cs_(c)[0];if(!f){flash('Primero registra una lesión para añadir mediciones');return}st.fcase=f.id;tab='fis';fsum='';delArm=null;save();render();const x=$('#fx');if(x)try{x.scrollIntoView({block:'center'})}catch(e){}}
 else if(a=='pfl'){pfl=b.dataset.v=='treat'?'treat':'all';render()}
 else if(a=='pnew'){const p=$('#pnewp');if(p){pnewOn=p.hidden;p.hidden=!pnewOn;if(pnewOn){try{p.scrollIntoView({block:'center'})}catch(e){}const i=$('#cn');if(i)i.focus()}}}
 else if(a=='selr'){st.active=b.dataset.id;save();render()}
@@ -66,8 +72,8 @@ else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').val
 else if(a=='wdel'){cw(cc()).splice(i,1);showTxt='';save();render()}
 else if(a=='wcopy'){const w=cw(cc())[i];w.days.forEach((d,k)=>{if(!d.name){delete st.week[k];return}const j=JSON.stringify(d.items);let r=st.routines.find(x=>x.name==d.name&&JSON.stringify(x.items)==j);if(!r){r={id:uid('r'),name:d.name,items:JSON.parse(j)};st.routines.push(r)}st.week[k]=r.id});save();flash('Copiada a Semana')}
 else if(a=='wtxt'||a=='ptxt'){const key=(a=='wtxt'?'w':'p')+i;showTxt=showTxt==key?'':key;render();setTimeout(()=>{const t=$('#txtbox');if(t){t.focus();t.select()}},0)}
-else if(a=='newc'){const n=$('#cn').value.trim();if(!n)return;const c={id:uid('k'),name:n,notes:'',plans:[]};st.clients.push(c);st.cc=c.id;pdet=true;pnewOn=false;psq='';save();render();window.scrollTo(0,0)}
-else if(a=='delc'){const c=cc();if(delArm!=c.id){delArm=c.id;flash('Pulsa otra vez para borrar a '+c.name);return}st.clients=st.clients.filter(x=>x.id!=c.id);(st.groups||[]).forEach(g=>g.members=g.members.filter(id=>id!=c.id));st.cc=null;delArm=null;save();render()}
+else if(a=='newc'){const n=$('#cn').value.trim();if(!n)return;const c={id:uid('k'),name:n,notes:'',plans:[]};st.clients.push(c);st.cc=c.id;pdet=true;ptab='res';pedit=true;pnewOn=false;psq='';save();render();window.scrollTo(0,0)}
+else if(a=='delc'){const c=cc();if(delArm!=c.id){delArm=c.id;flash('Pulsa otra vez para borrar a '+c.name);return}st.clients=st.clients.filter(x=>x.id!=c.id);(st.groups||[]).forEach(g=>g.members=g.members.filter(id=>id!=c.id));st.cc=null;pedit=false;ptab='res';delArm=null;save();render()}
 else if(a=='pdel'){cc().plans.splice(i,1);save();render()}
 else if(a=='pcopy'){const p=cc().plans[i],x={id:uid('r'),name:p.name+' (copia)',items:JSON.parse(JSON.stringify(p.items))};st.routines.push(x);st.active=x.id;save();flash('Copiada a Rutinas')}
 else if(a=='bulk'){const L=$('#bulk').value.split('\n').map(l=>l.split(/[;\t]/).map(s=>s.trim())).filter(p=>p[0]);const m=(v,A,d)=>A.find(x=>x.toLowerCase()==(v||'').toLowerCase())||d;L.forEach((p,k)=>st.custom.push({id:uid('c'),n:p[0],g:m(p[1],G,'Otro'),f:m(p[2],FN,''),e:p[3]||'',a:(p[4]||'').split(',').map(t=>AM.findIndex((_,k)=>actName(k).toLowerCase()==t.trim().toLowerCase())).filter(i=>i>=0)}));save();render();flash(L.length+' ejercicios importados')}
@@ -83,9 +89,13 @@ else if(a=='theme'){const h=document.documentElement;const dark=h.dataset.theme?
 document.addEventListener('input',ev=>{const t=ev.target;
 if(t.id=='q'){fq=t.value;lim=60;list()}
 else if(t.id=='psq'){psq=t.value;paPintar()}
-else if(t.id=='cbirth'){const c=cc();if(c){const v=t.value,ok=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>='1900-01-01'&&v<=today();if(ok)c.birth=v;else delete c.birth;save();paPintar();const e=$('#cedad');if(e)e.textContent=paEdad(c)}}
-else if(t.id=='csport'){const c=cc();if(c){const v=t.value.trim();if(v)c.sport=v;else delete c.sport;save();paPintar();cbxAbrir(v)}}
-else if(t.id=='cnotes'){cc().notes=t.value;save()}
+else if(t.id=='cbirth'){const c=cc();if(c){const v=t.value,ok=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>='1900-01-01'&&v<=today();if(ok)c.birth=v;else delete c.birth;save();paFichaPintar();const e=$('#cedad');if(e)e.textContent=paEdad(c)}}
+else if(t.id=='csport'){const c=cc();if(c){const v=t.value.trim();if(v)c.sport=v;else delete c.sport;save();paFichaPintar();cbxAbrir(v)}}
+else if(t.id=='cnotes'){cc().notes=t.value;save();paFichaPintar()}
+else if(t.id=='cweight'){const c=cc();if(c){const n=paNum(t.value,1,400);if(n==null)delete c.weight;else c.weight=n;save();paFichaPintar()}}
+else if(t.id=='cheight'){const c=cc();if(c){const n=paCm(t.value);if(n==null)delete c.height;else c.height=n;save();paFichaPintar()}}
+else if(t.id=='cgoal'){const c=cc();if(c){const v=t.value.trim();if(v)c.goal=v;else delete c.goal;save();paFichaPintar()}}
+else if(t.id=='cname'){const c=cc();if(c){const v=t.value.trim();if(v){c.name=v;save();paFichaPintar()}}}   // un nombre vacío no se guarda (se conserva el anterior)
 else if(t.id=='fd'||t.id=='ft'||t.id=='fp'||t.id=='fx'){snapDraft()}
 else if(t.id=='fsr'){fsrec=t.value}
 else if(t.id=='gnm'){curG().name=t.value;save()}
@@ -121,7 +131,7 @@ else if(t.id=='fcs'){const f=fcase();f.status=t.value;if(t.value=='Alta'){f.clos
 else if(t.id=='fcl'){const f=fcase();if(f&&f.status=='Alta'){f.closed=t.value||f.closed;save();render()}}
 else if(t.id=='fcn'||t.id=='gnm'){render()}
 else if(t.id=='cs'){st.cc=t.value;showTxt='';fsum='';save();render()}
-else if(t.id=='ac'&&t.value){const c=st.clients.find(x=>x.id==t.value),r=cur();if(c&&r){c.plans.unshift({id:uid('p'),date:new Date().toISOString().slice(0,10),name:r.name,note:'',items:JSON.parse(JSON.stringify(r.items))});save();flash('Asignada a '+c.name)}render()}
+else if(t.id=='ac'&&t.value){const c=st.clients.find(x=>x.id==t.value),r=cur();if(c&&r){c.plans.unshift({id:uid('p'),date:today(),name:r.name,note:'',items:JSON.parse(JSON.stringify(r.items))});save();flash('Asignada a '+c.name)}render()}
 else if(t.id=='rs'){st.active=t.value;save();render()}
 else if(t.dataset.a=='wk'){st.week[t.dataset.d]=t.value;delArm=null;save();render()}});
 

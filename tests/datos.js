@@ -157,16 +157,18 @@ const abrir = (idb, o) => open(Object.assign({ idb, wait: 500, seed: false }, o 
   // 9. Campos opcionales del paciente (sexo, edad, deporte): se guardan, sobreviven a cerrar y abrir y viajan en el registro
   const idb9 = new IDBFactory();
   let PX = abrir(idb9, { seed: true }); await PX.ready();
-  PX.w.eval("const c=st.clients[0];c.sex='f';c.birth='1998-03-04';c.sport='Voleibol';save()"); await PX.flush();
+  PX.w.eval("const c=st.clients[0];c.sex='f';c.birth='1998-03-04';c.sport='Voleibol';c.weight=78.5;c.height=186;c.goal='Volver a competir sin dolor';save()"); await PX.flush();
   const regCli = (await PX.Datos.registros(0)).find(r => r.kind == 'client' && r.id == PX.S().clients[0].id);
   T('paciente con sexo/nacimiento/deporte: el registro los lleva', regCli && regCli.data.sex == 'f' && regCli.data.birth == '1998-03-04' && regCli.data.sport == 'Voleibol' && !('plans' in regCli.data));
+  T('peso, altura y objetivo también viajan en el registro del paciente (sin migración)', regCli.data.weight == 78.5 && regCli.data.height == 186 && regCli.data.goal == 'Volver a competir sin dolor');
   PX.close();
   let PX2 = abrir(idb9); await PX2.ready();
   const c0 = PX2.S().clients[0];
   T('sexo, fecha de nacimiento y deporte sobreviven a cerrar y abrir', c0.sex == 'f' && c0.birth == '1998-03-04' && c0.sport == 'Voleibol' && PX2.errs.length == 0);
-  PX2.w.eval("delete st.clients[0].sport;save()"); await PX2.flush(); PX2.close();
+  T('peso, altura y objetivo sobreviven a cerrar y abrir; los demás pacientes (sin esos campos) no cambian', c0.weight == 78.5 && c0.height == 186 && c0.goal == 'Volver a competir sin dolor' && PX2.S().clients.slice(1).every(c => !('weight' in c) && !('goal' in c)));
+  PX2.w.eval("delete st.clients[0].sport;delete st.clients[0].goal;save()"); await PX2.flush(); PX2.close();
   let PX3 = abrir(idb9); await PX3.ready();
-  T('quitar un campo también se conserva', !('sport' in PX3.S().clients[0]) && PX3.S().clients[0].birth == '1998-03-04');
+  T('quitar un campo también se conserva', !('sport' in PX3.S().clients[0]) && !('goal' in PX3.S().clients[0]) && PX3.S().clients[0].birth == '1998-03-04' && PX3.S().clients[0].weight == 78.5);
   PX3.close();
   H0.finish();
 })().catch(e => { console.log('EXCEPCIÓN:', e.stack); process.exit(1); });
