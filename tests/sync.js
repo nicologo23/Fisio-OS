@@ -299,6 +299,27 @@ function crearNube() {
   T('envío automático: a los pocos segundos P queda "Todo enviado" sin pulsar nada', pend(P) == 0 && C0(P).notes == 'sin pulsar nada');
   Q.d.dispatchEvent(new Q.w.Event('visibilitychange')); await pausa(900); await Q.flush();
   T('al volver a primer plano Q se actualiza solo', C0(Q).notes == 'sin pulsar nada');
+  // Edición de rutinas y planes semanales ya asignados: el cambio viaja a los demás dispositivos (el id se conserva)
+  {
+    const cid = C0(P).id, pid = C0(P).plans[0].id, wid = C0(P).weeks[0].id, off = D => D.d.querySelector('[data-a=aecancel]');
+    P.tab('cli'); P.clk(`#plist [data-a=selc][data-id=${cid}]`); P.clk('[data-a=ptab][data-v=ej]');
+    P.clk(`#pp-${pid} [data-a=aeedit][data-k=p]`); P.set('#aen', 'Rutina ajustada en P'); P.set('.aed [data-ef=load][data-i="0"]', '99 kg'); P.clk('[data-a=aesave]');
+    P.clk(`#pw-${wid} [data-a=aeedit][data-k=w]`); P.set('#aef', '2026-12-28'); P.clk('[data-a=aesave]');
+    T('editar: el plan asignado y el plan semanal quedan con los cambios en P y con su mismo id', C0(P).plans[0].id == pid && C0(P).plans[0].name == 'Rutina ajustada en P' && C0(P).weeks[0].id == wid && C0(P).weeks[0].start == '2026-12-28');
+    await P.flush(); T('editar: 2 registros pendientes (el plan y el plan semanal, nada más)', pend(P) == 2);
+    await sync(P); await sync(Q);
+    T('editar: Q recibe la rutina editada y el nuevo inicio del plan semanal, con los mismos ids', C0(Q).plans[0].id == pid && C0(Q).plans[0].name == 'Rutina ajustada en P' && C0(Q).plans[0].items[0].load == '99 kg' && C0(Q).weeks[0].id == wid && C0(Q).weeks[0].start == '2026-12-28');
+    T('editar: P y Q quedan iguales y sin conflictos nuevos', norm(P.S()) == norm(Q.S()));
+    // Cambios simultáneos en el mismo plan desde dos dispositivos: se conserva uno y el otro queda como conflicto (nunca se pierde)
+    const c0 = Q.S().conflicts ? Q.S().conflicts.length : 0;
+    Q.tab('cli'); Q.clk(`#plist [data-a=selc][data-id=${cid}]`); Q.clk('[data-a=ptab][data-v=ej]');
+    P.clk(`#pp-${pid} [data-a=aeedit][data-k=p]`); P.set('#aen', 'Versión de P'); P.clk('[data-a=aesave]');
+    Q.clk(`#pp-${pid} [data-a=aeedit][data-k=p]`); Q.set('#aen', 'Versión de Q'); Q.clk('[data-a=aesave]');
+    await P.flush(); await Q.flush(); await sync(P); await sync(Q); await sync(P);
+    T('edición simultánea del mismo plan: los dos dispositivos terminan con el mismo resultado', C0(P).plans[0].name == C0(Q).plans[0].name && /^Versión de [PQ]$/.test(C0(P).plans[0].name));
+    T('edición simultánea: la versión perdedora se guarda como conflicto restaurable', (P.S().conflicts || []).length > c0 || (Q.S().conflicts || []).length > c0);
+    T('editar y sincronizar: sin errores de JavaScript', P.errs.length == 0 && Q.errs.length == 0);
+  }
   [P, Q].forEach(D => D.close());
   [A, B, Dv, X, Y, Z, W].forEach(D => D.close());
   H0.finish();
