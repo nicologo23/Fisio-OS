@@ -218,6 +218,11 @@ H.run(async ({ w, d, clk, set, tab, app, T, errs, S }) => {
   clk('[data-a=pedit]'); set('#chist', ''); set('#cnotes', 'Buena evolución. Mantener progresión.'); clk('[data-a=pedit]');
   T('el texto largo de antecedentes se ajusta (no desborda) y el Resumen sigue alineado con la columna derecha', /\.prt\b[^}]*min-width:0/.test(css) && /\.pgres #pres \.prs\{flex:1/.test(css));
   T('en móvil el título «Antecedentes» cabe (columna del título más ancha en móvil que el texto)', /@media \(max-width:519px\)\{\.prl\{flex-basis:96px/.test(css) && /\.prl\{flex:0 0 112px/.test(css));
+  // Estilo Deportivo más sobrio: botones y nombres en minúsculas/mayúsculas normales, título más pequeño
+  T('Deportivo: los botones principales ya no van en mayúsculas ni en negrita extra (como iOS y Clínico)', /\[data-style=deportivo\] button\.pri\{font-weight:700;letter-spacing:\.01em\}/.test(css) && !/deportivo\] button\.pri\{[^}]*uppercase/.test(css));
+  T('Deportivo: los nombres de pacientes ya no van en mayúsculas', !/deportivo\] \.pt b\{[^}]*uppercase/.test(css) && !/deportivo\] \.pcab-n\{[^}]*uppercase/.test(css));
+  T('Deportivo: título de pantalla en mayúsculas pero más pequeño y menos pesado (24 px, 800)', /deportivo\] #ttl\{text-transform:uppercase;font-weight:800;letter-spacing:\.02em;font-size:24px\}/.test(css));
+  T('la barra flotante de rutina no parte «Ver rutina» en dos líneas', /#curbar button\{white-space:nowrap/.test(css));
   // Resumen: lesiones
   clk('[data-a=pback]'); clk('#plist [data-a=selc][data-id=k4]');
   T('Resumen: siempre 4 tarjetas (Lesión · Objetivo · Antecedentes · Notas)', d.querySelectorAll('#pres .prs').length == 4 && JSON.stringify([...d.querySelectorAll('#pres .prl')].map(e => e.textContent)) == '["Lesiones","Objetivo","Antecedentes","Notas"]');
@@ -252,7 +257,7 @@ H.run(async ({ w, d, clk, set, tab, app, T, errs, S }) => {
   clk('#ptabc [data-a=pver][data-v=p]'); T('«Ver rutina» (rutina suelta) abre Ejercicio en esa rutina', w.eval('ptab') == 'ej' && !!d.getElementById('pp-p1') && /Informe PDF/.test(d.getElementById('pp-p1').textContent));
   ev(`cc().weeks=${semanas};render()`); clk('[data-a=ptab][data-v=res]');
   // Pestañas Progreso y Salto (de momento vacías)
-  clk('[data-a=ptab][data-v=pro]'); T('pestaña Progreso: preparada, vacía', w.eval('ptab') == 'pro' && /Progreso/.test(d.getElementById('ptabc').textContent) && /preparación/.test(d.getElementById('ptabc').textContent));
+  clk('[data-a=ptab][data-v=pro]'); T('pestaña Progreso: se abre (el gráfico se prueba en progreso.js)', w.eval('ptab') == 'pro' && /Progreso/.test(d.getElementById('ptabc').textContent) && !!d.getElementById('prg'));
   clk('[data-a=ptab][data-v=sal]'); T('pestaña Salto: preparada, vacía', w.eval('ptab') == 'sal' && /Salto/.test(d.getElementById('ptabc').textContent) && /preparación/.test(d.getElementById('ptabc').textContent));
   clk('[data-a=ptab][data-v=res]');
   // Atajos
