@@ -52,6 +52,8 @@ else if(a=='spp'){const c=cc(),i=$('#csport');if(c&&i){c.sport=b.dataset.v;i.val
 else if(a=='ptog'){pcol=!pcol;render()}
 else if(a=='ftog'){fcol=!fcol;render()}
 else if(a=='ptab'){ptab=b.dataset.v;render()}
+else if(a=='prt'){prg.t=b.dataset.v;prPintar()}
+else if(a=='prpt'){const r=$('#prread');if(r){r.textContent=b.dataset.t;r.classList.add('on')}}
 else if(a=='pedit'){pedit=b.dataset.v=='1'?true:!pedit;render();if(pedit){const e=$('.pdat');if(e)try{e.scrollIntoView({block:'nearest'})}catch(x){}}}
 else if(a=='pver'){const c=cc(),w=b.dataset.v=='w',id=b.dataset.id;if(!c)return;ptab='ej';render();const e=document.getElementById((w?'pw-':'pp-')+id);if(e){const d=e.querySelector('details');if(d)d.open=true;let t=e;if(w&&b.dataset.d){const dd=document.getElementById('pwd-'+id+'-'+b.dataset.d);if(dd){t=dd;dd.classList.add('hl')}}try{t.scrollIntoView({block:'start'})}catch(er){}}}
 else if(a=='pnl'){if(!cc())return;st.fcase=null;tab='fis';fsum='';delArm=null;save();render();const d=document.querySelector('.fisl .pane-l details');if(d){d.open=true;try{d.scrollIntoView({block:'center'})}catch(x){}}}
@@ -91,6 +93,7 @@ if(t.id=='q'){fq=t.value;lim=60;list()}
 else if(t.id=='psq'){psq=t.value;paPintar()}
 else if(t.id=='cbirth'){const c=cc();if(c){const v=t.value,ok=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>='1900-01-01'&&v<=today();if(ok)c.birth=v;else delete c.birth;save();paFichaPintar();const e=$('#cedad');if(e)e.textContent=paEdad(c)}}
 else if(t.id=='csport'){const c=cc();if(c){const v=t.value.trim();if(v)c.sport=v;else delete c.sport;save();paFichaPintar();cbxAbrir(v)}}
+else if(t.id=='chist'){const c=cc();if(c){const v=t.value.trim();if(v)c.hist=t.value;else delete c.hist;save();paFichaPintar()}}
 else if(t.id=='cnotes'){cc().notes=t.value;save();paFichaPintar()}
 else if(t.id=='cweight'){const c=cc();if(c){const n=paNum(t.value,1,400);if(n==null)delete c.weight;else c.weight=n;save();paFichaPintar()}}
 else if(t.id=='cheight'){const c=cc();if(c){const n=paCm(t.value);if(n==null)delete c.height;else c.height=n;save();paFichaPintar()}}
@@ -106,6 +109,10 @@ else if(t.dataset.pn!==undefined){cc().plans[+t.dataset.pn].note=t.value;save()}
 else if(t.id=='rn'){cur().name=t.value;save()}
 else if(t.dataset.f){cur().items[+t.dataset.i][t.dataset.f]=t.value;save()}});
 document.addEventListener('change',ev=>{const t=ev.target;
+if(t.id=='pry'){prg.k=t.value;prg.d='';prPintar();return}
+if(t.id=='pryd'){prg.d=t.value;prPintar();return}
+if(t.id=='prx'){prg.xk=t.value;prg.xd='';prPintar();return}
+if(t.id=='prxd'){prg.xd=t.value;prPintar();return}
 if(t.id=='pgf'){pgr=t.value;render()}
 else if(t.id=='fg'){fg=t.value;lim=60;list()}
 else if(t.id=='ff'){ff=t.value;lim=60;list()}
