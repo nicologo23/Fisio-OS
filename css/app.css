@@ -227,7 +227,7 @@ button.plink{min-height:0;padding:0;background:transparent;color:var(--ac);font-
 .prsl{display:flex;flex-direction:column;gap:8px}
 .prs{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;box-sizing:border-box;text-align:left;padding:12px 14px;border-radius:12px;background:var(--fill);color:var(--tx);min-height:0;font-size:15px;font-weight:400;margin:0}
 .prs svg{flex:none;color:var(--mut)}
-.prl{flex:0 0 100px;font-size:16px;font-weight:600;color:var(--mut);padding-top:0;align-self:center}
+.prl{flex:0 0 112px;font-size:16px;font-weight:600;color:var(--mut);padding-top:0;align-self:center}
 .prt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;align-items:flex-start}
 .prt b{font-weight:600;font-size:16px;overflow-wrap:anywhere}.prt small{font-size:12.5px;color:var(--mut)}
 .pnt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
@@ -255,8 +255,8 @@ button.plink{min-height:0;padding:0;background:transparent;color:var(--ac);font-
 /* Ficha: ajustes 26/11 (Resumen a igual altura, Plan semanal, pestañas nuevas) */
 .pgres{align-items:stretch}
 .pgres .pgfill{flex:1;display:flex;flex-direction:column}
-.pgres #pres{flex:1}
-.pgres #pres .prs{flex:1;align-items:center}
+.pgres #pres{flex:1 0 auto}
+.pgres #pres .prs{flex:1 0 auto;align-items:center}
 .pri.sm{min-height:34px;padding:0 12px;font-size:14px}
 .pct .pplh{flex:1;min-width:0;margin:0;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .psem{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
@@ -277,4 +277,4 @@ button.plink{min-height:0;padding:0;background:transparent;color:var(--ac);font-
 .pgres .pact li{padding:7px 0}
 .pgres .pct .pplh+button{margin-left:0}
 .dh{margin-bottom:8px}
-@media (max-width:519px){.prl{flex-basis:78px;font-size:15px}}
+@media (max-width:519px){.prl{flex-basis:96px;font-size:14px}}

@@ -196,9 +196,31 @@ H.run(async ({ w, d, clk, set, tab, app, T, errs, S }) => {
   clk('[data-a=pedit]'); set('#cgoal', ''); clk('[data-a=pedit]');
   T('sin objetivo: se quita la clave y el Resumen invita a añadirlo', !('goal' in pc('k1')) && /Sin objetivo definido/.test(rs().textContent));
   clk('#pres [data-a=pedit]'); T('«Sin objetivo definido» abre la edición', !!d.getElementById('cgoal')); clk('[data-a=pedit]');
+  // Antecedentes: campo opcional, independiente de Objetivo y Notas
+  const filasRes = () => [...d.querySelectorAll('#pres .prs')];
+  const tit = () => filasRes().map(e => e.querySelector('.prl').textContent);
+  clk('[data-a=pedit]');
+  T('«Editar datos» tiene el campo «Antecedentes» (texto multilínea) entre Objetivo y Notas', d.getElementById('chist').tagName == 'TEXTAREA' && (d.getElementById('cgoal').compareDocumentPosition(d.getElementById('chist')) & 4) == 4 && (d.getElementById('chist').compareDocumentPosition(d.getElementById('cnotes')) & 4) == 4);
+  T('el campo Antecedentes está vacío al principio y no existe la clave', d.getElementById('chist').value == '' && !('hist' in pc('k1')));
+  set('#chist', 'Rotura de LCA derecho (2019), operada.\nAsma leve.\nEsguince de tobillo izquierdo (2022).');
+  T('los antecedentes se guardan como texto libre en el paciente (varias líneas)', pc('k1').hist == 'Rotura de LCA derecho (2019), operada.\nAsma leve.\nEsguince de tobillo izquierdo (2022).');
+  T('Objetivo y Notas no se tocan al escribir antecedentes', !('goal' in pc('k1')) && pc('k1').notes == 'Buena evolución. Mantener progresión.');
+  clk('[data-a=pedit]');
+  T('Resumen: 4 tarjetas en orden Lesión · Objetivo · Antecedentes · Notas', filasRes().length == 4 && JSON.stringify(tit().map((t, i) => i == 0 ? 'L' : t)) == '["L","Objetivo","Antecedentes","Notas"]');
+  const rh = filasRes()[2];
+  T('la tarjeta Antecedentes muestra el texto escrito y lleva su icono', /Rotura de LCA derecho/.test(rh.textContent) && /Asma leve/.test(rh.textContent) && !!rh.querySelector('svg') && rh.classList.contains('hist') && rh.querySelector('.pnt') && /pre-wrap/.test(require('fs').readFileSync(__dirname + '/../css/app.css', 'utf8').match(/\.pnt\{[^}]*\}/)[0]));
+  T('Antecedentes tiene el mismo diseño de fila que las demás (misma clase .prs, título .prl y texto .prt)', rh.classList.contains('prs') && !!rh.querySelector('.prl') && !!rh.querySelector('.prt') && rh.querySelector('svg').outerHTML != filasRes()[3].querySelector('svg').outerHTML);
+  clk('[data-a=pedit]'); set('#chist', '   '); clk('[data-a=pedit]');
+  T('vacío (solo espacios): se quita la clave y el Resumen dice «Sin antecedentes registrados»', !('hist' in pc('k1')) && /Sin antecedentes registrados/.test(filasRes()[2].textContent) && filasRes().length == 4);
+  T('al quedar vacío no se tocan Objetivo ni Notas', pc('k1').notes == 'Buena evolución. Mantener progresión.' && /Buena evolución/.test(filasRes()[3].textContent));
+  clk('[data-a=pedit]'); set('#chist', 'Sin antecedentes de interés'); set('#cnotes', ''); clk('[data-a=pedit]');
+  T('Notas vacías y Antecedentes con texto: cada campo es independiente', !/Sin antecedentes registrados/.test(rs().textContent) && /Sin notas/.test(filasRes()[3].textContent) && pc('k1').hist == 'Sin antecedentes de interés');
+  clk('[data-a=pedit]'); set('#chist', ''); set('#cnotes', 'Buena evolución. Mantener progresión.'); clk('[data-a=pedit]');
+  T('el texto largo de antecedentes se ajusta (no desborda) y el Resumen sigue alineado con la columna derecha', /\.prt\b[^}]*min-width:0/.test(css) && /\.pgres #pres \.prs\{flex:1/.test(css));
+  T('en móvil el título «Antecedentes» cabe (columna del título más ancha en móvil que el texto)', /@media \(max-width:519px\)\{\.prl\{flex-basis:96px/.test(css) && /\.prl\{flex:0 0 112px/.test(css));
   // Resumen: lesiones
   clk('[data-a=pback]'); clk('#plist [data-a=selc][data-id=k4]');
-  T('Resumen: siempre 3 tarjetas (Lesión · Objetivo · Notas)', d.querySelectorAll('#pres .prs').length == 3 && JSON.stringify([...d.querySelectorAll('#pres .prl')].map(e => e.textContent)) == '["Lesiones","Objetivo","Notas"]');
+  T('Resumen: siempre 4 tarjetas (Lesión · Objetivo · Antecedentes · Notas)', d.querySelectorAll('#pres .prs').length == 4 && JSON.stringify([...d.querySelectorAll('#pres .prl')].map(e => e.textContent)) == '["Lesiones","Objetivo","Antecedentes","Notas"]');
   T('con dos lesiones activas: una sola tarjeta con «2 lesiones activas», cuáles son y los días', d.querySelectorAll('#pres .prs.act').length == 1 && /2 lesiones activas/.test(rs().textContent) && /Tendinopatía rotuliana · 40 días/.test(rs().textContent) && /Sobrecarga lumbar · 12 días/.test(rs().textContent) && /lesión activa/.test(cab()));
   clk('#pres .prs.act'); T('tocar esa tarjeta lleva al apartado de lesiones (pestaña Clínica) del paciente', w.eval('ptab') == 'cli' && w.eval('tab') == 'cli' && d.querySelectorAll('#ptabc .prs').length == 2);
   clk('#ptabc [data-a=fgo][data-id=c1]'); T('y desde ahí se entra en la lesión que se quiera', w.eval('tab') == 'fis' && S().fcase == 'c1');
@@ -278,7 +300,7 @@ H.run(async ({ w, d, clk, set, tab, app, T, errs, S }) => {
   ev("fcol=false;pdet=false;ptab='res';pedit=false;tab='cli';render()");
 
   // Resumen: títulos e iconos más grandes
-  T('Resumen: títulos de fila (Lesión, Objetivo, Notas) a 16 px y filas centradas', /\.prl\{[^}]*font-size:16px/.test(css) && /\.prs\{display:flex;align-items:center/.test(css));
+  T('Resumen: títulos de fila (Lesión, Objetivo, Antecedentes, Notas) a 16 px y filas centradas', /\.prl\{[^}]*font-size:16px/.test(css) && /\.prs\{display:flex;align-items:center/.test(css));
 
   // Estado vacío
   ev("st.clients=[];st.groups=[];pdet=false;pnewOn=false;render()");

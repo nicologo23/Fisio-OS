@@ -91,6 +91,7 @@ if(t.id=='q'){fq=t.value;lim=60;list()}
 else if(t.id=='psq'){psq=t.value;paPintar()}
 else if(t.id=='cbirth'){const c=cc();if(c){const v=t.value,ok=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>='1900-01-01'&&v<=today();if(ok)c.birth=v;else delete c.birth;save();paFichaPintar();const e=$('#cedad');if(e)e.textContent=paEdad(c)}}
 else if(t.id=='csport'){const c=cc();if(c){const v=t.value.trim();if(v)c.sport=v;else delete c.sport;save();paFichaPintar();cbxAbrir(v)}}
+else if(t.id=='chist'){const c=cc();if(c){const v=t.value.trim();if(v)c.hist=t.value;else delete c.hist;save();paFichaPintar()}}
 else if(t.id=='cnotes'){cc().notes=t.value;save();paFichaPintar()}
 else if(t.id=='cweight'){const c=cc();if(c){const n=paNum(t.value,1,400);if(n==null)delete c.weight;else c.weight=n;save();paFichaPintar()}}
 else if(t.id=='cheight'){const c=cc();if(c){const n=paCm(t.value);if(n==null)delete c.height;else c.height=n;save();paFichaPintar()}}
