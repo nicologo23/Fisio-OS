@@ -3,7 +3,7 @@
   "private": true,
   "description": "Planificador de entrenamiento y seguimiento de fisioterapia (PWA de un solo archivo). Este package.json es solo para las pruebas.",
   "scripts": {
-    "test": "node tests/version.js && node tests/smoke.js && node tests/flows.js && node tests/nav.js && node tests/pacientes.js && node tests/datos.js && node tests/sync.js"
+    "test": "node tests/version.js && node tests/fecha.js && node tests/smoke.js && node tests/flows.js && node tests/nav.js && node tests/pacientes.js && node tests/datos.js && node tests/sync.js"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.8",

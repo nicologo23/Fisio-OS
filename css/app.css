@@ -97,7 +97,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}table.t td,table.t th
 details.card>summary{font-weight:600;min-height:36px}
 .sec{margin:0 0 10px}.sech{width:100%;justify-content:space-between;background:var(--card);color:var(--tx);min-height:50px;border-radius:var(--r);padding:0 14px;font-size:15px;box-shadow:0 0 0 .5px var(--bd)}.sech>span:first-child{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;text-align:left}.sec.o .sech{border-bottom-left-radius:0;border-bottom-right-radius:0}.sech .cv{color:var(--mut);display:flex;transition:transform .15s}.sec.o .sech .cv{transform:rotate(90deg)}.secb{background:var(--card);padding:var(--pad);border-radius:0 0 var(--r) var(--r);box-shadow:0 0 0 .5px var(--bd);border-top:.5px solid var(--bd)}
 .fld2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}.fld2 .g{grid-column:1/-1}.fld2 select,.fld2 input{width:100%}.fld2 button{grid-column:1/-1}
-.li-card{cursor:pointer}.li-card.sel{box-shadow:0 0 0 2px var(--ac)}
+.li-card{cursor:pointer}.li-card.sel{box-shadow:inset 0 0 0 2px var(--ac)}
 @media (pointer:coarse){.chip,.segc button,button.chip{min-height:40px}textarea,#bk{font-size:16px}}
 #pdfbar,#upd{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);border:1px solid var(--ac);border-radius:12px;padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:30;box-shadow:0 4px 18px rgba(0,0,0,.25)}#upd{bottom:calc(64px + env(safe-area-inset-bottom,0px))}@media(max-width:819px){#pdfbar{bottom:calc(72px + env(safe-area-inset-bottom,0px))}#upd{bottom:calc(128px + env(safe-area-inset-bottom,0px))}}
 #saveerr{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));background:#ff3b30;color:#fff;border-radius:12px;padding:10px 12px;z-index:60;font-size:14px;font-weight:600;box-shadow:0 4px 18px rgba(0,0,0,.25)}
@@ -190,3 +190,91 @@ body.arrastrando-ya{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .nvi{position:relative;display:inline-flex}
 .nvi .dot{display:none;position:absolute;top:-3px;right:-5px;width:9px;height:9px;border-radius:50%;background:#e5484d;box-shadow:0 0 0 2px var(--card)}
 button.av .nvi .dot{display:block}
+
+/* ---- Ficha del paciente (cabecera, pestañas, tarjetas de Resumen) ---- */
+.dh .ped{margin-left:auto}
+.pcabw{padding:12px 14px;container-type:inline-size}
+.pcab{display:flex;flex-direction:column;gap:14px}
+.pcab-id{display:flex;gap:14px;align-items:center;min-width:0}
+.pav.big{width:64px;height:64px}
+.pcab-t{min-width:0}
+.pcab-n{margin:0;font-size:24px;line-height:1.15;font-weight:700;overflow-wrap:anywhere}
+[data-style=deportivo] .pcab-n{text-transform:uppercase;letter-spacing:.02em}
+.pcab-s{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:5px;font-size:14px;color:var(--mut)}
+.pchip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--warn);background:var(--fill)}
+.pcab-d{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.pcab-g{margin-top:7px}
+.pcab-id{flex:1 1 auto}
+@container (min-width:460px){.pcab-d{grid-template-columns:repeat(4,1fr)}}
+@container (min-width:720px){.pcab{flex-direction:row;align-items:center;justify-content:space-between;gap:24px}.pcab-d{flex:0 1 480px}}
+.pdc{display:flex;flex-direction:column;gap:1px;min-width:0;background:var(--fill);border-radius:12px;padding:7px 12px}
+.pdl{font-size:11.5px;color:var(--mut)}
+.pdv{font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.pdv.none{color:var(--mut);font-weight:400}
+.segc.ptabs{margin:10px 0}.segc.ptabs button{padding:0 2px;font-size:13.5px;min-height:36px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:0 16px;align-items:start}
+.pgc{display:flex;flex-direction:column;min-width:0}
+.pgh{margin-top:6px}
+.pcd{margin-bottom:12px}
+.pct{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:17px}.pct b{font-weight:700}.pct svg{color:var(--ac);flex:none}
+.pct .ptagc,.pct .plink{margin-left:auto}
+.ptagc{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--fill);color:var(--mut)}
+button.plink{min-height:0;padding:0;background:transparent;color:var(--ac);font-size:13px;font-weight:500}
+.pqa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media (max-width:519px){.pqa{grid-template-columns:repeat(2,1fr)}}
+.pqa button{flex-direction:column;gap:6px;min-height:78px;padding:10px 6px;text-align:center;line-height:1.2;font-size:13px;font-weight:600;color:var(--ac);background:var(--card);box-shadow:0 0 0 .5px var(--bd)}
+@supports (background:color-mix(in srgb,red,blue)){.pqa button{background:color-mix(in srgb,var(--ac) 9%,var(--card))}}
+.prsl{display:flex;flex-direction:column;gap:8px}
+.prs{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;box-sizing:border-box;text-align:left;padding:12px 14px;border-radius:12px;background:var(--fill);color:var(--tx);min-height:0;font-size:15px;font-weight:400;margin:0}
+.prs svg{flex:none;color:var(--mut)}
+.prl{flex:0 0 100px;font-size:16px;font-weight:600;color:var(--mut);padding-top:0;align-self:center}
+.prt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.prt b{font-weight:600;font-size:16px;overflow-wrap:anywhere}.prt small{font-size:12.5px;color:var(--mut)}
+.pnt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.prs.mute b{color:var(--mut);font-weight:500}
+@supports (background:color-mix(in srgb,red,blue)){
+ .prs.act{background:color-mix(in srgb,var(--warn) 14%,var(--card))}
+ .prs.goal,.prs.ok{background:color-mix(in srgb,var(--ac) 11%,var(--card))}}
+.prs.act svg,.prs.act .prl{color:var(--warn)}.prs.goal svg,.prs.ok svg{color:var(--ac)}
+.pcr{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pcrt{display:flex;flex-direction:column;gap:2px;min-width:0}.pcrt b{overflow-wrap:anywhere}.pcrt span{font-size:13px}
+.pcr button{flex:none}
+.pcn{margin:0;font-size:14px}
+.pact{list-style:none;margin:0;padding:0}
+.pact li{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:.5px solid var(--bd)}
+.pact li:first-child{border-top:0;padding-top:0}.pact li:last-child{padding-bottom:0}
+.pai{flex:none;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--fill);color:var(--ac)}
+.pat{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.pat b{font-size:15px;font-weight:600;overflow-wrap:anywhere}.pat small{font-size:13px;color:var(--mut);overflow-wrap:anywhere}
+.pact time{flex:none;font-size:12px;color:var(--mut);white-space:nowrap;padding-top:3px}
+.pdat .pct{margin-bottom:6px}.pdat>.lb{margin-top:4px}.pdat>label.lb{margin-top:10px}.pdat>.row{margin-top:14px}
+.pdr2{margin-top:10px}.pdr2>label.lb{flex:1;min-width:0}
+.pdr2>label:first-child{flex:1 1 0}
+.pdat input,.pdat textarea{box-sizing:border-box;width:100%}
+@media (min-width:1000px){.pdat{max-width:640px}}
+
+/* Ficha: ajustes 26/11 (Resumen a igual altura, Plan semanal, pestañas nuevas) */
+.pgres{align-items:stretch}
+.pgres .pgfill{flex:1;display:flex;flex-direction:column}
+.pgres #pres{flex:1}
+.pgres #pres .prs{flex:1;align-items:center}
+.pri.sm{min-height:34px;padding:0 12px;font-size:14px}
+.pct .pplh{flex:1;min-width:0;margin:0;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psem{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.psem li{display:flex;gap:10px;align-items:baseline;padding:2px 9px;border-radius:9px;font-size:14px}
+.psem li b{flex:0 0 78px;font-weight:600}.psem li span{min-width:0;overflow-wrap:anywhere}
+.psem li.rest span{color:var(--mut)}
+.psem li.hoy{background:var(--fill)}.psem li.hoy b{color:var(--ac)}
+@supports (background:color-mix(in srgb,red,blue)){.psem li.hoy{background:color-mix(in srgb,var(--ac) 13%,var(--card))}}
+.pwd.hl{background:var(--fill);border-radius:10px;padding:6px 10px;margin-left:-10px;margin-right:-10px}
+.pvac{margin-top:2px}
+
+.pgres .pct{margin-bottom:8px}
+.pgres .pcd{padding:12px 14px}
+.pgres .pact li{padding:8px 0}
+.pgres .pcr{gap:10px}
+.pgres #pres .prs{padding:12px 14px}
+.pgres .pat small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pgres .pact li{padding:7px 0}
+.pgres .pct .pplh+button{margin-left:0}
+.dh{margin-bottom:8px}
+@media (max-width:519px){.prl{flex-basis:78px;font-size:15px}}
