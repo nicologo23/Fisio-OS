@@ -1,8 +1,8 @@
 // Pestañas, render() y manejo de eventos (click / input / change)
 const V={hoy,lib,rut,sem,cli,fis,grp,dat};
 function render(){nav();$('#app').innerHTML=V[tab]();if(tab=='lib')list();document.body.dataset.tab=tab;Sync.pintar()}
-document.addEventListener('click',ev=>{const b=ev.target.closest('[data-a]');if(!b||b.tagName=='SELECT')return;const a=b.dataset.a,i=+b.dataset.i,r=cur();
-if(a=='tab'){tab=b.dataset.k;masOn=false;showTxt='';fsum='';delArm=null;render();return}
+document.addEventListener('click',ev=>{if(!ev.target.closest('.cbx'))cbxCerrar();const b=ev.target.closest('[data-a]');if(!b||b.tagName=='SELECT')return;const a=b.dataset.a,i=+b.dataset.i,r=cur();
+if(a=='tab'){tab=b.dataset.k;masOn=false;if(tab=='cli'){pdet=false;pcol=false}showTxt='';fsum='';delArm=null;render();return}
 if(a=='mas'){masOn=!masOn;nav();return}
 if(a=='masx'){masOn=false;nav();return}
 if(a=='toR')addToR(b.dataset.id);
@@ -41,10 +41,17 @@ else if(a=='gpdf'){const g=curG();if(!g||!g.members.length){flash('Añade pacien
 else if(a=='fpan'){fpan=!fpan;const p=$('#fpanel');if(p)p.classList.toggle('open',fpan)}
 else if(a=='ui'){const u=b.dataset.u,v=b.dataset.v;ui[u]=(u=='fs'||u=='dens')?+v:v;saveUI();applyUI();render()}
 else if(a=='uit'){ui[b.dataset.u]=b.checked?1:0;saveUI();render()}
-else if(a=='qa'){const k=b.dataset.k;if(k=='nr'){const r={id:uid('r'),name:'Rutina '+(st.routines.length+1),items:[]};st.routines.push(r);st.active=r.id;save();tab='rut';render()}else{tab=k;render();setTimeout(()=>{const i=$(k=='cli'?'#cn':'#fn');if(i)i.focus()},60)}}
-else if(a=='fichac'){st.cc=b.dataset.id;save();tab='cli';render()}
+else if(a=='qa'){const k=b.dataset.k;if(k=='nr'){const r={id:uid('r'),name:'Rutina '+(st.routines.length+1),items:[]};st.routines.push(r);st.active=r.id;save();tab='rut';render()}else{tab=k;if(k=='cli'){pdet=false;pnewOn=true}render();setTimeout(()=>{const i=$(k=='cli'?'#cn':'#fn');if(i)i.focus()},60)}}
+else if(a=='fichac'){st.cc=b.dataset.id;pdet=true;save();tab='cli';render()}
 else if(a=='fgo2'){st.cc=b.dataset.c;st.fcase=b.dataset.id;save();tab='fis';render()}
-else if(a=='selc'){st.cc=b.dataset.id;save();render()}
+else if(a=='selc'){st.cc=b.dataset.id;pdet=true;save();render();window.scrollTo(0,0)}
+else if(a=='pback'){pdet=false;render();window.scrollTo(0,0)}
+else if(a=='psx'){const c=cc();if(c){const v=b.dataset.v;if(v=='f'||v=='m')c.sex=v;else delete c.sex;save();render()}}
+else if(a=='spt'){const l=$('#csl');if(l&&!l.hidden)cbxCerrar();else cbxAbrir('')}
+else if(a=='spp'){const c=cc(),i=$('#csport');if(c&&i){c.sport=b.dataset.v;i.value=b.dataset.v;save();paPintar();cbxCerrar()}}
+else if(a=='ptog'){pcol=!pcol;render()}
+else if(a=='pfl'){pfl=b.dataset.v=='treat'?'treat':'all';render()}
+else if(a=='pnew'){const p=$('#pnewp');if(p){pnewOn=p.hidden;p.hidden=!pnewOn;if(pnewOn){try{p.scrollIntoView({block:'center'})}catch(e){}const i=$('#cn');if(i)i.focus()}}}
 else if(a=='selr'){st.active=b.dataset.id;save();render()}
 else if(a=='fsec'){fsec[b.dataset.k]=!secOn(b.dataset.k);render()}
 else if(a=='fback'){st.fcase=null;fe=null;fsum='';save();render()}
@@ -59,7 +66,7 @@ else if(a=='aw'||a=='awc'){const c=a=='aw'?st.clients.find(x=>x.id==$('#wc').val
 else if(a=='wdel'){cw(cc()).splice(i,1);showTxt='';save();render()}
 else if(a=='wcopy'){const w=cw(cc())[i];w.days.forEach((d,k)=>{if(!d.name){delete st.week[k];return}const j=JSON.stringify(d.items);let r=st.routines.find(x=>x.name==d.name&&JSON.stringify(x.items)==j);if(!r){r={id:uid('r'),name:d.name,items:JSON.parse(j)};st.routines.push(r)}st.week[k]=r.id});save();flash('Copiada a Semana')}
 else if(a=='wtxt'||a=='ptxt'){const key=(a=='wtxt'?'w':'p')+i;showTxt=showTxt==key?'':key;render();setTimeout(()=>{const t=$('#txtbox');if(t){t.focus();t.select()}},0)}
-else if(a=='newc'){const n=$('#cn').value.trim();if(!n)return;const c={id:uid('k'),name:n,notes:'',plans:[]};st.clients.push(c);st.cc=c.id;save();render()}
+else if(a=='newc'){const n=$('#cn').value.trim();if(!n)return;const c={id:uid('k'),name:n,notes:'',plans:[]};st.clients.push(c);st.cc=c.id;pdet=true;pnewOn=false;psq='';save();render();window.scrollTo(0,0)}
 else if(a=='delc'){const c=cc();if(delArm!=c.id){delArm=c.id;flash('Pulsa otra vez para borrar a '+c.name);return}st.clients=st.clients.filter(x=>x.id!=c.id);(st.groups||[]).forEach(g=>g.members=g.members.filter(id=>id!=c.id));st.cc=null;delArm=null;save();render()}
 else if(a=='pdel'){cc().plans.splice(i,1);save();render()}
 else if(a=='pcopy'){const p=cc().plans[i],x={id:uid('r'),name:p.name+' (copia)',items:JSON.parse(JSON.stringify(p.items))};st.routines.push(x);st.active=x.id;save();flash('Copiada a Rutinas')}
@@ -75,6 +82,9 @@ else if(a=='imp'){try{const d=JSON.parse($('#bk').value);if(!d||!Array.isArray(d
 else if(a=='theme'){const h=document.documentElement;const dark=h.dataset.theme?h.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;h.dataset.theme=dark?'light':'dark'}});
 document.addEventListener('input',ev=>{const t=ev.target;
 if(t.id=='q'){fq=t.value;lim=60;list()}
+else if(t.id=='psq'){psq=t.value;paPintar()}
+else if(t.id=='cbirth'){const c=cc();if(c){const v=t.value,ok=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v>='1900-01-01'&&v<=today();if(ok)c.birth=v;else delete c.birth;save();paPintar();const e=$('#cedad');if(e)e.textContent=paEdad(c)}}
+else if(t.id=='csport'){const c=cc();if(c){const v=t.value.trim();if(v)c.sport=v;else delete c.sport;save();paPintar();cbxAbrir(v)}}
 else if(t.id=='cnotes'){cc().notes=t.value;save()}
 else if(t.id=='fd'||t.id=='ft'||t.id=='fp'||t.id=='fx'){snapDraft()}
 else if(t.id=='fsr'){fsrec=t.value}
@@ -86,7 +96,8 @@ else if(t.dataset.pn!==undefined){cc().plans[+t.dataset.pn].note=t.value;save()}
 else if(t.id=='rn'){cur().name=t.value;save()}
 else if(t.dataset.f){cur().items[+t.dataset.i][t.dataset.f]=t.value;save()}});
 document.addEventListener('change',ev=>{const t=ev.target;
-if(t.id=='fg'){fg=t.value;lim=60;list()}
+if(t.id=='pgf'){pgr=t.value;render()}
+else if(t.id=='fg'){fg=t.value;lim=60;list()}
 else if(t.id=='ff'){ff=t.value;lim=60;list()}
 else if(t.id=='eg'){st.ov[ed]=Object.assign({},st.ov[ed],{g:t.value});save();list()}
 else if(t.id=='ef'){st.ov[ed]=Object.assign({},st.ov[ed],{f:t.value});save();list()}
