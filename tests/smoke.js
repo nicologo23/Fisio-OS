@@ -25,6 +25,7 @@ H.run(({ w, d, clk, tab, app, S, T, K, errs, html }) => {
   T('zonas pintadas (2 de la demo)', d.querySelectorAll('.bz.on').length == 2);
   clk('[data-a=fz][data-z=rodilla-D]'); T('marcar zona', d.querySelectorAll('.bz.on').length == 3);
   clk('[data-a=fzclr]'); T('quitar zonas', d.querySelectorAll('.bz.on').length == 0);
+  tab('hoy'); T('Hoy muestra el nombre de la app («Fisio OS») y para qué sirve, a la vista (lo necesita la verificación de Google)', /Fisio OS/.test(d.querySelector('.hoyn').textContent) && /Planificador de entrenamiento y fisioterapia/.test(d.querySelector('.hoyn').textContent) && d.querySelector('#app').textContent.includes('Fisio OS'));
   // Grupos, pacientes, biblioteca
   tab('grp'); T('grupos: resumen', /Resumen/.test(app()));
   tab('cli'); T('pacientes: lista', /Ana García/.test(app()));
