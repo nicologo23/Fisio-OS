@@ -22,6 +22,17 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   // Línea de tiempo del vídeo (dt) distinta del tiempo real: se avanza por el vídeo y se calcula con los fps de la cámara
   ev('sj.dur=16;sj.dt=1/60'); T('vídeo ralentizado (un fotograma cada 1/60 s de vídeo, 16 s): 960 fotogramas, y el fotograma n está en (n+0,5)/60 s', ev('sjTot()') == 960 && near(ev('sjT(10)'), 10.5 / 60)); ev('sj.dur=0;sj.dt=0');
   T('sin medir, se supone que el vídeo va a los fps indicados', near(ev('sjDt()'), 1 / 240));
+  // Cabecera del archivo: fotogramas y duración del sonido → fps de grabación (clip de 120 fps con la línea de tiempo ralentizada a 30)
+  const buf = require('fs').readFileSync(require('path').join(__dirname, 'salto-120fps.mp4')), fake = { size: buf.length, slice: (a, b) => ({ arrayBuffer: async () => buf.buffer.slice(buf.byteOffset + a, buf.byteOffset + Math.min(b, buf.length)) }) };
+  w.__f = fake; const cab = await w.eval('sjCabecera(__f)');
+  T('cabecera del .mp4/.mov: fotogramas del vídeo, duración del sonido y paso de fotograma de la línea de tiempo (1/30 s, uniforme)', cab && cab.n >= 158 && cab.n <= 162 && near(cab.adur, 1.333, 0.05) && near(cab.dt, 1 / 30, 1e-4) && cab.irr === false);
+  T('fps de grabación = fotogramas / sonido ≈ 120 (se redondea a la velocidad habitual más cercana)', w.eval(`sjAjusta(${cab.n / cab.adur})`) == 120 && w.eval('sjAjusta(117.5)') == 120 && w.eval('sjAjusta(238)') == 240 && w.eval('sjAjusta(77)') === null);
+  T('una cabecera ilegible no rompe nada', (w.__g = { size: 100, slice: () => ({ arrayBuffer: async () => new ArrayBuffer(100) }) }, await w.eval('sjCabecera(__g)')) === null);
+  // Al elegir ese archivo la app pone sola los fps de la cámara (120) y la línea de tiempo medida (1/30)
+  tab('cli'); clk(`#plist [data-a=selc][data-id=${cid}]`); clk('[data-a=ptab][data-v=sal]');
+  w.__f.name = 'clip120.mov'; const f0 = d.getElementById('sjf'); Object.defineProperty(f0, 'files', { value: [w.__f] }); f0.dispatchEvent(new w.Event('change', { bubbles: true })); await ready(300);
+  T('al elegir el archivo: fps puestos a 120 por el sonido y paso de fotograma 1/30 s de vídeo', ev('sj.fps') == 120 && d.getElementById('sjfps').value == '120' && near(ev('sj.dt'), 1 / 30, 1e-4) && ev('sj.auto.fps') == 120);
+  ev('sjSoltar()'); ev("sj.fps=240");
   // ---- Pantalla ----
   tab('cli'); clk(`#plist [data-a=selc][data-id=${cid}]`); clk('[data-a=ptab][data-v=sal]');
   const P = () => d.getElementById('ptabc').textContent;
