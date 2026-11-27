@@ -258,7 +258,7 @@ H.run(async ({ w, d, clk, set, tab, app, T, errs, S }) => {
   ev(`cc().weeks=${semanas};render()`); clk('[data-a=ptab][data-v=res]');
   // Pestañas Progreso y Salto (de momento vacías)
   clk('[data-a=ptab][data-v=pro]'); T('pestaña Progreso: se abre (el gráfico se prueba en progreso.js)', w.eval('ptab') == 'pro' && /Progreso/.test(d.getElementById('ptabc').textContent) && !!d.getElementById('prg'));
-  clk('[data-a=ptab][data-v=sal]'); T('pestaña Salto: preparada, vacía', w.eval('ptab') == 'sal' && /Salto/.test(d.getElementById('ptabc').textContent) && /preparación/.test(d.getElementById('ptabc').textContent));
+  clk('[data-a=ptab][data-v=sal]'); T('pestaña Salto: analizador de vídeo y listas (ver tests/salto.js)', w.eval('ptab') == 'sal' && /Analizar un salto/.test(d.getElementById('ptabc').textContent) && /Saltos guardados/.test(d.getElementById('ptabc').textContent) && !/preparación/.test(d.getElementById('ptabc').textContent));
   clk('[data-a=ptab][data-v=res]');
   // Atajos
   clk('[data-a=ptab][data-v=res]');
