@@ -52,7 +52,10 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   set('#sjr', '100'); T('el deslizador lleva al fotograma 100', ev('sj.n') == 100);
   clk('[data-a=sjm][data-v=fd]'); ev('sjIr(220)'); clk('[data-a=sjm][data-v=fa]');
   T('marcas: despegue 100, aterrizaje 220 → resultado en pantalla (0,500 s · 30,7 cm)', ev('sj.fd') == 100 && ev('sj.fa') == 220 && /0,500 s/.test(d.getElementById('sjinfo').textContent) && /30,7 cm/.test(d.getElementById('sjinfo').textContent));
-  ev('sj.fd=0;sj.fa=472;sjPintar()'); T('474 cm (472 fotogramas): avisa de que no es creíble', /poco creíble/.test(d.getElementById('sjinfo').textContent) && /474/.test(d.getElementById('sjinfo').textContent)); ev('sj.fd=100;sj.fa=220;sjPintar()');
+  ev('sj.fd=0;sj.fa=472;sjPintar()'); T('474 cm (472 fotogramas): avisa de que no es creíble', /poco creíble/.test(d.getElementById('sjinfo').textContent) && /474/.test(d.getElementById('sjinfo').textContent)); T('el aviso propone los fps que harían creíble el salto (472 fotogramas → unos 674–1573)', /674–1573 fps/.test(d.getElementById('sjinfo').textContent));
+  ev('sj.fps=60;sj.fd=0;sj.fa=50;sjPintar()'); T('50 fotogramas a 60 fps = 85,2 cm: avisa y sugiere 71–167 fps (el 120 entra)', /85,2 cm/.test(d.getElementById('sjinfo').textContent) && /poco creíble/.test(d.getElementById('sjinfo').textContent) && /71–167 fps/.test(d.getElementById('sjinfo').textContent));
+  ev('sj.fps=120;sjPintar()'); T('esos mismos 50 fotogramas a 120 fps = 21,3 cm y sin aviso', /21,3 cm/.test(d.getElementById('sjinfo').textContent) && !/poco creíble/.test(d.getElementById('sjinfo').textContent)); ev('sj.fps=240');
+  ev('sj.fd=100;sj.fa=220;sjPintar()');
   clk('[data-a=sjg][data-v=fd]'); T('«Ir» vuelve a la marca', ev('sj.n') == 100);
   set('#sjm-fa', '230'); T('la marca también se puede escribir a mano (230 → 0,542 s)', ev('sj.fa') == 230 && /0,542 s/.test(d.getElementById('sjinfo').textContent));
   set('#sjm-fa', '90'); T('aterrizaje antes del despegue: no hay resultado y lo dice', /posterior/.test(d.getElementById('sjinfo').textContent) && !/Altura/.test(d.getElementById('sjinfo').textContent));

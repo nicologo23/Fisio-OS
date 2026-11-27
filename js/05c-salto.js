@@ -113,7 +113,8 @@ function sjInforme(){
   const v=sjV(),dt=sjDt(),fv=1/dt,tot=sjTot(),A=sj.auto;let m='Vídeo listo: '+(v?v.videoWidth+'×'+v.videoHeight+' px, ':'')+sjFr(sj.dur,2)+' s de vídeo'+(sj.dt?', '+tot+' fotogramas':'')+'. ',mal=false;
   if(A&&A.adur>0){
     m+='Por el sonido, el clip duró '+sjFr(A.adur,2)+' s reales: '+A.n+' fotogramas en ese tiempo son unos '+sjFr(A.real,0)+' por segundo'+(A.fps?', así que se grabó a '+A.fps+' fps':'')+'. ';
-    if(A.fps&&sj.fps==A.fps)m+='Ya he puesto '+A.fps+' fotogramas por segundo abajo.';
+    if(A.vdur>0&&Math.abs(A.adur/A.vdur-1)<0.03&&A.fps&&A.fps<=60){m+='⚠ El sonido dura lo mismo que el vídeo: o es un vídeo normal, o el iPhone lo ha convertido y ha estirado también el sonido, y entonces no hay forma de saber los fps reales por el archivo. Si era cámara lenta, pon a mano los fps con los que grabaste (120 o 240) y comprueba que el tiempo en el aire sale entre 0,3 y 0,7 s.';mal=true}
+    else if(A.fps&&sj.fps==A.fps)m+='Ya he puesto '+A.fps+' fotogramas por segundo abajo.';
     else if(A.fps){m+='⚠ Abajo tienes '+sj.fps+'; si no lo cambiaste tú a propósito, vuelve a poner '+A.fps+'.';mal=true}
     else{m+='⚠ No coincide con una velocidad de grabación habitual: revisa los fotogramas por segundo de abajo.';mal=true}}
   else if(!sj.dt)m+='No he podido medir sus fotogramas; se supone '+sj.fps+' por segundo.';
@@ -133,7 +134,7 @@ function sjInfoHTML(){
   if(desv)h+=`<div class="sjw">⚠ El vídeo está en el fotograma ${sj.real}, no en el ${sj.n}. Revisa los fotogramas por segundo del vídeo.</div>`;
   h+=`<div class="sjmk">${sjMarcasHTML()}</div>`;
   if(r.ok){h+=`<div class="sjrs"><div><span class="mut">Tiempo de vuelo</span><b>${sjFr(r.t,3)} s</b><small>${r.fv} fotogramas</small></div><div><span class="mut">Altura</span><b>${sjFr(r.h)} cm</b></div>`+(r.tc!=null?`<div><span class="mut">Contacto</span><b>${sjFr(r.tc,3)} s</b><small>${r.fcn} fotogramas</small></div><div><span class="mut">RSI</span><b>${sjFr(r.rsi,2)}</b></div>`:'')+`</div>`}
-  if(r.ok&&(r.h>100||r.h<3))h+=`<p class="sjw">⚠ ${sjFr(r.h)} cm es poco creíble para un salto. Revisa que despegue y aterrizaje estén bien marcados y que los fotogramas por segundo (${sj.fps}) sean los de la cámara.</p>`;
+  if(r.ok&&(r.h>70||r.h<3||r.t<0.2||r.t>0.75))h+=`<p class="sjw">⚠ ${sjFr(r.h)} cm (${sjFr(r.t,3)} s en el aire) es poco creíble para un salto. Revisa que despegue y aterrizaje estén bien marcados y que los fotogramas por segundo (${sj.fps}) sean los de la cámara: un salto normal dura en el aire entre 0,3 y 0,7 s, y con ${r.fv} fotogramas eso corresponde a unos ${sjFr(r.fv/0.7,0)}–${sjFr(r.fv/0.3,0)} fps.</p>`;
   if(r.msg)h+=`<p class="mut pcn sjhint">${r.msg}</p>`;
   return h}
 function sjPintar(){
