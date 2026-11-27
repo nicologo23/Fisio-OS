@@ -69,6 +69,21 @@ function sjSesiones(c){
     d.brazos=b.Abalakov&&b.CMJ?(b.Abalakov-b.CMJ)/b.CMJ*100:null;   // uso de brazos = (Abalakov − CMJ) / CMJ × 100
     return d})}
 
+// Interpretación DESCRIPTIVA de los índices (texto aportado por el usuario, 27/11/2026): no son puntos de corte validados ni un baremo clínico.
+// Cada fila: [límite inferior (incluido), nombre corto, resumen, aspectos que valorar]. Se elige la última fila cuyo límite es <= valor.
+const SJ_IE=[[-1e9,'Negativo','CMJ inferior al SJ','Técnica, fatiga, dolor, error de medición.'],
+  [0,'Escaso','Escaso incremento con contramovimiento','Estrategia excéntrica, capacidad de frenado y transición.'],
+  [5,'Moderado','Incremento moderado','Interpretar junto con la altura absoluta.'],
+  [10,'Considerable','Incremento considerable','Beneficio relevante del contramovimiento.'],
+  [20,'Elevado','Incremento relativo elevado','Comprobar si existe un rendimiento reducido en SJ.']];
+const SJ_IUB=[[-1e9,'Negativo','ABK inferior al CMJ','Revisar ejecución, dolor o error de medición.'],
+  [0,'Muy reducida','Contribución relativa muy reducida','Coordinación y sincronización del braceo.'],
+  [5,'Reducida','Contribución reducida','Técnica de salto y amplitud del braceo.'],
+  [10,'Considerable','Contribución considerable','Beneficio relevante de la acción de los brazos.'],
+  [20,'Elevada','Contribución elevada','Buen incremento relativo con braceo.'],
+  [30,'Muy elevada','Contribución muy elevada','Revisar también el rendimiento del CMJ sin brazos.']];
+const sjInterp=(T,x)=>{if(x==null||!isFinite(x))return null;let r=T[0];T.forEach(f=>{if(x>=f[0])r=f});return{corto:r[1],txt:r[2],ver:r[3]}};
+const sjRangoTxt=T=>T.map((f,i)=>{const lo=f[0]<-1e8?null:f[0],hi=T[i+1]?T[i+1][0]:null;return(lo==null?'Menos de 0 %':hi==null?'Más de '+lo+' %':lo+'–'+hi+' %')+': <b>'+f[2]+'</b>. '+f[3]}).map(x=>'<li>'+x+'</li>').join('');
 function sjAjustar(c){if(sj.c!=c.id){sjSoltar();sj.c=c.id;sj.date=today();sj.tipo='CMJ';sj.fd=sj.fa=sj.fc=null;sj.note=''}if(!sj.date)sj.date=today()}
 function sjSoltar(){if(sj.url){try{URL.revokeObjectURL(sj.url)}catch(e){}}sj.url='';sj.name='';sj.est='';sj.ok=false;clearTimeout(sj.tm);sj.medido=false;sj.cabOk=null;sj.meta=false;sj.dt=0;sj.irr=false;sj.auto=null;sj.conf=false;sj.id++;sj.n=0;sj.dur=0;sj.real=null;sj.err=''}
 const sjV=()=>$('#sjv');
@@ -154,7 +169,14 @@ function sjListaHTML(c){
 function sjIndHTML(c){
   const S=sjSesiones(c);if(!S.length)return'<p class="mut pcn">Cuando guardes saltos aparecerán aquí la mejor altura de cada tipo y las comparativas.</p>';
   const f=(x,d=1,u='')=>x==null?'<span class="mut">—</span>':sjFr(x,d)+u;
-  return`<div class="sjtw"><table class="prtb"><thead><tr><th>Día</th><th>SJ</th><th>CMJ</th><th>Abalakov</th><th>Índice elástico</th><th>Uso de brazos</th></tr></thead><tbody>${S.map(d=>`<tr><td>${esc(fmtC(d.date)||d.date)}</td><td>${f(d.best.SJ)}</td><td>${f(d.best.CMJ)}</td><td>${f(d.best.Abalakov)}</td><td>${f(d.elas,1,' %')}</td><td>${f(d.brazos,1,' %')}</td></tr>`).join('')}</tbody></table></div><p class="mut prnote">Alturas en cm; se usa el mejor salto de cada tipo del día. Índice elástico = (CMJ − SJ) / SJ × 100. Uso de brazos = (Abalakov − CMJ) / CMJ × 100.</p>`}
+  const ce=(x,T)=>{const i=sjInterp(T,x);return f(x,1,' %')+(i?`<div class="sjtag">${i.corto}</div>`:'')};
+  const U=S[0],ie=sjInterp(SJ_IE,U.elas),iu=sjInterp(SJ_IUB,U.brazos);
+  const blq=(nom,v,i)=>i?`<div class="sjit"><div><b>${nom}: ${sjFr(v,1)} %</b> · ${i.txt}</div><div class="mut">Aspectos que valorar: ${i.ver}</div></div>`:'';
+  const interp=blq('Índice elástico',U.elas,ie)+blq('Uso de brazos',U.brazos,iu);
+  return`<div class="sjtw"><table class="prtb"><thead><tr><th>Día</th><th>SJ</th><th>CMJ</th><th>Abalakov</th><th>Índice elástico</th><th>Uso de brazos</th></tr></thead><tbody>${S.map(d=>`<tr><td>${esc(fmtC(d.date)||d.date)}</td><td>${f(d.best.SJ)}</td><td>${f(d.best.CMJ)}</td><td>${f(d.best.Abalakov)}</td><td>${ce(d.elas,SJ_IE)}</td><td>${ce(d.brazos,SJ_IUB)}</td></tr>`).join('')}</tbody></table></div>
+  ${interp?`<div class="sjint"><div class="lb">Interpretación · ${esc(fmtC(U.date)||U.date)}</div>${interp}</div>`:''}
+  <details class="sjtips"><summary>Ver todos los rangos de interpretación</summary><div class="lb">Índice elástico</div><ul>${sjRangoTxt(SJ_IE)}</ul><div class="lb">Uso de brazos</div><ul>${sjRangoTxt(SJ_IUB)}</ul></details>
+  <p class="mut prnote">Alturas en cm; se usa el mejor salto de cada tipo del día. Índice elástico = (CMJ − SJ) / SJ × 100. Uso de brazos = (Abalakov − CMJ) / CMJ × 100. Los intervalos son <b>orientativos y descriptivos</b>: no son puntos de corte validados ni permiten diagnosticar por sí solos.</p>`}
 function sjListasPintar(){const c=cc();if(!c)return;const a=$('#sjlist'),b=$('#sjind');if(a)a.innerHTML=sjListaHTML(c);if(b)b.innerHTML=sjIndHTML(c)}
 
 function paSalto(c){

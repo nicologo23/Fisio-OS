@@ -92,6 +92,13 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   T('4 saltos guardados; el peor CMJ del día no cuenta, se usa el mejor de cada tipo', sa.length == 4 && ev('sjSesiones(cc())').length == 1 && near(ev('sjSesiones(cc())[0].best.CMJ'), cmj));
   T('índice elástico = (CMJ − SJ) / SJ × 100', near(ev('sjSesiones(cc())[0].elas'), (cmj - sjj) / sjj * 100, 1e-9) && tabla.includes((Math.round((cmj - sjj) / sjj * 1000) / 10).toLocaleString('es-ES', { minimumFractionDigits: 1 }) + ' %'));
   T('uso de brazos = (Abalakov − CMJ) / CMJ × 100', near(ev('sjSesiones(cc())[0].brazos'), (abk - cmj) / cmj * 100, 1e-9));
+  const ci = (T, x) => ev(`sjInterp(${T},${x}).corto`);
+  T('interpretación IE: límites 0, 5, 10 y 20 % (el límite inferior entra en su tramo)', ci('SJ_IE', -0.1) == 'Negativo' && ci('SJ_IE', 0) == 'Escaso' && ci('SJ_IE', 4.99) == 'Escaso' && ci('SJ_IE', 5) == 'Moderado' && ci('SJ_IE', 10) == 'Considerable' && ci('SJ_IE', 19.9) == 'Considerable' && ci('SJ_IE', 20) == 'Elevado' && ci('SJ_IE', 80) == 'Elevado');
+  T('interpretación IUB: límites 0, 5, 10, 20 y 30 %', ci('SJ_IUB', -3) == 'Negativo' && ci('SJ_IUB', 0) == 'Muy reducida' && ci('SJ_IUB', 5) == 'Reducida' && ci('SJ_IUB', 10) == 'Considerable' && ci('SJ_IUB', 20) == 'Elevada' && ci('SJ_IUB', 29.9) == 'Elevada' && ci('SJ_IUB', 30) == 'Muy elevada');
+  T('sin dato no hay interpretación', ev('sjInterp(SJ_IE,null)') === null && ev('sjInterp(SJ_IUB,NaN)') === null);
+  const tx = d.getElementById('sjind').textContent;
+  T('comparativas: etiqueta corta en la tabla, bloque con el texto y los aspectos a valorar de la última sesión', /Considerable/.test(tx) && /Incremento considerable/.test(tx) && /Beneficio relevante del contramovimiento/.test(tx) && /Contribución considerable/.test(tx) && /Beneficio relevante de la acción de los brazos/.test(tx));
+  T('aviso de que los intervalos son orientativos y la lista de todos los rangos está disponible', /orientativos y descriptivos/.test(tx) && /Ver todos los rangos/.test(tx) && /Más de 30 %/.test(tx) && /Menos de 0 %/.test(tx) && /Más de 20 %/.test(tx));
   mete('Drop jump', 100, 220, null); T('drop jump sin contacto inicial no se guarda', S().clients[0].saltos.length == 4);
   mete('Drop jump', 100, 220, 40, '2026-11-22');
   T('drop jump con contacto inicial: se guarda con fc y la lista enseña contacto y RSI', S().clients[0].saltos.length == 5 && /RSI/.test(d.getElementById('sjlist').textContent) && /contacto 0,250 s/.test(d.getElementById('sjlist').textContent));
