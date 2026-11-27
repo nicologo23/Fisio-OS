@@ -42,7 +42,7 @@ Además: no se añaden funciones de seguridad avanzadas ni dependencias que no h
 - **Local primero.** La app siempre lee y escribe en IndexedDB. La nube nunca está “en medio”.
 - **Un archivo por dispositivo.** Cada dispositivo escribe solo `fisio-os--<idDispositivo>.json` (una copia completa de sus registros) y lee los de los demás. Dos dispositivos nunca escriben el mismo archivo, así que Drive no puede pisar nada.
 - **Proveedor sustituible.** `Sync` solo usa: `configurado, conectado, preparar, conectar, desconectar, invalidar, listar, leer, escribir`. Para cambiar de Google Drive a otro servicio se escribe otro proveedor con esa interfaz; no se toca `Sync` ni `Datos`.
-- **Formato del archivo:** `{formato:'fisio-os-sync', esquema:2, dispositivo, generado, registros:[{k,id,kind,parent,ord,data,updatedAt,deletedAt,vv}]}`. Los registros son las mismas filas que guarda IndexedDB (salvo la marca local `pend`).
+- **Formato del archivo:** `{formato:'fisio-os-sync', esquema:2, dispositivo, generado, registros:[{k,id,kind,parent,ord,data,updatedAt,deletedAt,vv}]}` (tipos: client, plan, week, **salto** (27/11/2026, hijo del paciente), case, entry, routine, group, exercise, override, ajuste, conflicto). Los registros son las mismas filas que guarda IndexedDB (salvo la marca local `pend`).
 - **Qué NO se sincroniza:** selecciones de este dispositivo (paciente abierto, rutina activa…), preferencias visuales, el ID de cliente de Google y el permiso temporal.
 
 ## 3. Sincronización, versiones y conflictos

@@ -320,6 +320,28 @@ function crearNube() {
     T('edición simultánea: la versión perdedora se guarda como conflicto restaurable', (P.S().conflicts || []).length > c0 || (Q.S().conflicts || []).length > c0);
     T('editar y sincronizar: sin errores de JavaScript', P.errs.length == 0 && Q.errs.length == 0);
   }
+  // Saltos: cada salto es su propio registro; llega a los demás dispositivos, se elimina en todos y un cambio simultáneo no pierde nada
+  {
+    const cid = C0(P).id, nS = D => (C0(D).saltos || []).length;
+    await edit(P, "st.clients[0].saltos=[{id:'sjA',date:'2026-11-20',tipo:'CMJ',fps:240,fd:100,fa:220},{id:'sjB',date:'2026-11-20',tipo:'SJ',fps:240,fd:100,fa:212,note:'de P'}];save()"); await P.flush();
+    T('saltos: 2 registros pendientes (los 2 saltos; el paciente no cambia porque no los lleva dentro)', pend(P) == 2);
+    await sync(P); await sync(Q);
+    T('saltos: Q recibe los 2 saltos con sus datos', nS(Q) == 2 && C0(Q).saltos.find(s => s.id == 'sjB').note == 'de P' && C0(Q).saltos.find(s => s.id == 'sjA').fd == 100);
+    await edit(Q, "st.clients[0].saltos.push({id:'sjC',date:'2026-11-21',tipo:'Abalakov',fps:240,fd:90,fa:225});save()"); await Q.flush(); await sync(Q); await sync(P);
+    T('saltos: un salto nuevo en Q llega a P', nS(P) == 3 && nS(Q) == 3);
+    await edit(P, "st.clients[0].saltos.splice(0,1);save()"); await P.flush(); await sync(P); await sync(Q);
+    T('saltos: eliminar un salto en P lo elimina también en Q (lápida) y no toca los demás', nS(Q) == 2 && !C0(Q).saltos.some(s => s.id == 'sjA') && C0(Q).saltos.some(s => s.id == 'sjB'));
+    const c0 = Q.S().conflicts ? Q.S().conflicts.length : 0;
+    await edit(P, "st.clients[0].saltos.find(s=>s.id=='sjB').note='nota P';save()"); await edit(Q, "st.clients[0].saltos.find(s=>s.id=='sjB').note='nota Q';save()");
+    await P.flush(); await Q.flush(); await sync(P); await sync(Q); await sync(P);
+    T('saltos: edición simultánea del mismo salto: los dos terminan igual y la otra versión queda como conflicto', C0(P).saltos.find(s => s.id == 'sjB').note == C0(Q).saltos.find(s => s.id == 'sjB').note && ((P.S().conflicts || []).length > c0 || (Q.S().conflicts || []).length > c0));
+    T('saltos: P y Q quedan iguales y sin errores', norm(P.S()) == norm(Q.S()) && P.errs.length == 0 && Q.errs.length == 0);
+    // Restaurar la versión perdedora (Datos → Conflictos) vuelve a poner esos datos en el salto
+    const DD = [P, Q].find(D => (D.S().conflicts || []).some(x => x.kind == 'salto')), cf = DD && DD.S().conflicts.find(x => x.kind == 'salto'), ganadora = DD && C0(DD).saltos.find(s => s.id == 'sjB').note;
+    T('saltos: el conflicto se identifica como «Salto»', !!cf && cf.rid == 'sjB' && cf.data.note != ganadora);
+    const r = DD.w.eval(`Datos.usarConflicto(st,${JSON.stringify(cf.id)})`), sb = C0(DD).saltos.find(s => s.id == 'sjB');
+    T('saltos: «Usar esta versión» devuelve la nota perdedora al mismo salto sin tocar sus marcas', r.ok && sb.note == cf.data.note && sb.fd == 100 && sb.fa == 212 && C0(DD).saltos.length == 2);
+  }
   [P, Q].forEach(D => D.close());
   [A, B, Dv, X, Y, Z, W].forEach(D => D.close());
   H0.finish();

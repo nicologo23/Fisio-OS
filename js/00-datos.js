@@ -26,9 +26,10 @@ const Datos=(()=>{
       if(!o.id||M.has(clave(kind,o.id)))o.id=uid(kind[0]);   // sin id o repetido: se le da uno nuevo para no perder nada
       const data={};for(const k in o)if(!omit||!omit.includes(k))data[k]=o[k];
       M.set(clave(kind,o.id),{k:clave(kind,o.id),id:o.id,kind,parent:parent||null,ord,data})};
-    (st.clients||[]).forEach((c,i)=>{add('client',c,null,i,['plans','weeks','cases']);
+    (st.clients||[]).forEach((c,i)=>{add('client',c,null,i,['plans','weeks','cases','saltos']);
       (c.plans||[]).forEach((p,j)=>add('plan',p,c.id,j));
       (c.weeks||[]).forEach((w,j)=>add('week',w,c.id,j));
+      (c.saltos||[]).forEach((w,j)=>add('salto',w,c.id,j));
       (c.cases||[]).forEach((f,j)=>{add('case',f,c.id,j,['entries']);(f.entries||[]).forEach((e,m)=>add('entry',e,f.id,m))})});
     (st.routines||[]).forEach((r,i)=>add('routine',r,null,i));
     (st.groups||[]).forEach((g,i)=>add('group',g,null,i));
@@ -48,6 +49,7 @@ const Datos=(()=>{
     por('client').forEach(r=>{const c=Object.assign({},U(r),{plans:[],weeks:[],cases:[]});cl.set(r.id,c);st.clients.push(c)});
     por('plan').forEach(r=>{const c=cl.get(r.parent);c?c.plans.push(U(r)):huerfanos++});
     por('week').forEach(r=>{const c=cl.get(r.parent);c?c.weeks.push(U(r)):huerfanos++});
+    por('salto').forEach(r=>{const c=cl.get(r.parent);if(c){(c.saltos=c.saltos||[]).push(U(r))}else huerfanos++});
     por('case').forEach(r=>{const c=cl.get(r.parent);if(!c){huerfanos++;return}const f=Object.assign({},U(r),{entries:[]});ca.set(r.id,f);c.cases.push(f)});
     por('entry').forEach(r=>{const f=ca.get(r.parent);f?f.entries.push(U(r)):huerfanos++});
     por('routine').forEach(r=>st.routines.push(U(r)));
@@ -192,11 +194,11 @@ const Datos=(()=>{
     const en=l=>(l||[]).find(o=>o&&o.id==id);
     if(kind=='client')return en(st.clients);if(kind=='routine')return en(st.routines);if(kind=='group')return en(st.groups);if(kind=='exercise')return en(st.custom);
     for(const c of st.clients||[]){
-      if(kind=='plan'){const o=en(c.plans);if(o)return o}else if(kind=='week'){const o=en(c.weeks);if(o)return o}
+      if(kind=='plan'){const o=en(c.plans);if(o)return o}else if(kind=='week'){const o=en(c.weeks);if(o)return o}else if(kind=='salto'){const o=en(c.saltos);if(o)return o}
       else if(kind=='case'){const o=en(c.cases);if(o)return o}
       else if(kind=='entry')for(const f of c.cases||[]){const o=en(f.entries);if(o)return o}}
     return null}
-  const HIJOS={client:['plans','weeks','cases'],case:['entries']};
+  const HIJOS={client:['plans','weeks','cases','saltos'],case:['entries']};
   function datosDe(st,kind,rid,obj,muestra){
     if(kind=='ajuste'&&rid=='semana')return{map:JSON.parse(JSON.stringify(st.week||{}))};
     if(kind=='ajuste'&&rid=='resto'){const o={};Object.keys(muestra||{}).forEach(k=>{if(st[k]!==undefined)o[k]=JSON.parse(JSON.stringify(st[k]))});return o}

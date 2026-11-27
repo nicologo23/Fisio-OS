@@ -6,6 +6,7 @@ if(a=='tab'){tab=b.dataset.k;masOn=false;if(tab=='cli'){pdet=false;pcol=false;pt
 if(a=='mas'){masOn=!masOn;nav();return}
 if(a=='masx'){masOn=false;nav();return}
 if(a.slice(0,2)=='ae'&&aeAccion(a,b)){}
+else if(a.slice(0,2)=='sj'&&sjAccion(a,b)){}
 else if(a=='toR')addToR(b.dataset.id);
 else if(a=='addex'){const n=$('#nn').value.trim();if(!n)return;st.custom.push({id:uid('c'),g:$('#ng').value,f:$('#nf').value,a:[...$('#na').selectedOptions].map(o=>+o.value),c:CAT.filter((q,i)=>$('#nc'+i)&&$('#nc'+i).checked),j:$('#njp')&&$('#njp').checked?['Pie']:[],n,e:$('#ne').value.trim()});save();render();flash('Ejercicio creado')}
 else if(a=='tt'||a=='tj'){const A=a=='tt'?ft:fj,v=b.dataset.v,k=A.indexOf(v);k<0?A.push(v):A.splice(k,1);lim=60;$('#chips').innerHTML=chips();list()}
@@ -89,7 +90,7 @@ else if(a=='dn'&&i<r.items.length-1){[r.items[i+1],r.items[i]]=[r.items[i],r.ite
 else if(a=='exp'){if(!confirm(CONF_EXP))return;bkTouch();$('#bk').value=JSON.stringify(st);$('#bk').select();flash('Copia generada')}
 else if(a=='imp'){try{const d=JSON.parse($('#bk').value);if(!d||!Array.isArray(d.routines))throw 0;if(!confirm(CONF_IMP)){flash('Importación cancelada: no se ha cambiado nada');return}st=Object.assign({custom:[],routines:[],week:{},active:null,clients:[],cc:null,ov:{},groups:[]},d);fixCases();save();flash('Importado')}catch(e){flash('JSON no válido')}}
 else if(a=='theme'){const h=document.documentElement;const dark=h.dataset.theme?h.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;h.dataset.theme=dark?'light':'dark'}});
-document.addEventListener('input',ev=>{const t=ev.target;if(aeInput(t))return;
+document.addEventListener('input',ev=>{const t=ev.target;if(aeInput(t))return;if(t.type!='file'&&sjInput(t))return;
 if(t.id=='ws'){wsStart=t.value;return}
 if(t.id=='q'){fq=t.value;lim=60;list()}
 else if(t.id=='psq'){psq=t.value;paPintar()}
@@ -111,6 +112,7 @@ else if(t.dataset.pn!==undefined){cc().plans[+t.dataset.pn].note=t.value;save()}
 else if(t.id=='rn'){cur().name=t.value;save()}
 else if(t.dataset.f){cur().items[+t.dataset.i][t.dataset.f]=t.value;save()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(aeInput(t)){if(t.id=='aef')render();return}
+if(sjInput(t))return;
 if(t.id=='ws'){wsStart=t.value;return}
 if(t.id=='prles'){prg.les=t.value;prPintar();return}
 if(t.id=='pry'){prg.k=t.value;prg.d='';prPintar();return}
