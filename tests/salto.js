@@ -105,9 +105,19 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   T('los saltos se muestran del más reciente al más antiguo', d.querySelector('#sjlist li').textContent.includes('Drop jump'));
 
   // Eliminar
-  w.__ok = false; clk('#sjlist [data-a=sjdel]'); T('eliminar pregunta antes y, si se rechaza, no borra', w.__confirms.length == 1 && S().clients[0].saltos.length == 5);
-  w.__ok = true; clk('#sjlist [data-a=sjdel]'); await flush(); T('eliminar confirmado quita el salto', S().clients[0].saltos.length == 4 && !/Drop jump/.test(d.getElementById('sjlist').textContent));
-
+  clk('#sjlist [data-a=sjdel]'); T('eliminar pide confirmar dentro de la pantalla (sin confirm()) y todavía no borra', S().clients[0].saltos.length == 5 && /¿Eliminar\?/.test(d.getElementById('sjlist').textContent) && !!d.querySelector('#sjlist [data-a=sjdel2]'));
+  clk('#sjlist [data-a=sjdelx]'); T('«No» cancela: no borra y vuelve la papelera', S().clients[0].saltos.length == 5 && !d.querySelector('#sjlist [data-a=sjdel2]') && !!d.querySelector('#sjlist [data-a=sjdel]'));
+  clk('#sjlist [data-a=sjdel]'); clk('#sjlist [data-a=sjdel2]'); await flush(); T('«Sí, eliminar» quita el salto', S().clients[0].saltos.length == 4 && !/Drop jump/.test(d.getElementById('sjlist').textContent));
+  // Fecha del test en Comparativas
+  const optv = () => [...d.querySelectorAll('#sjcmp option')].map(o => o.value);
+  T('selector de fecha: por defecto la más reciente, y «Todas las fechas»', optv().join() == '2026-11-20,all' && d.getElementById('sjcmp').value == '2026-11-20' && d.querySelectorAll('#sjind tbody tr').length == 1);
+  mete('CMJ', 100, 200, null, '2026-11-25'); mete('SJ', 100, 190, null, '2026-11-25');
+  T('con dos fechas: el selector las lista (la más reciente primero) y enseña solo la más reciente', optv().join() == '2026-11-25,2026-11-20,all' && d.querySelectorAll('#sjind tbody tr').length == 1 && /25/.test(d.querySelector('#sjind tbody td').textContent));
+  set('#sjcmp', '2026-11-20'); await flush();
+  T('elegir otra fecha: solo esa fila y su interpretación', d.querySelectorAll('#sjind tbody tr').length == 1 && d.getElementById('sjcmp').value == '2026-11-20' && /Interpretación · .*20/.test(d.getElementById('sjind').textContent) && /Beneficio relevante del contramovimiento/.test(d.getElementById('sjind').textContent));
+  set('#sjcmp', 'all'); await flush();
+  T('«Todas las fechas»: una fila por día', d.querySelectorAll('#sjind tbody tr').length == 2 && d.getElementById('sjcmp').value == 'all');
+  set('#sjcmp', '2026-11-25'); await flush(); T('día sin Abalakov: la tabla enseña — y el uso de brazos no se interpreta', d.querySelectorAll('#sjind tbody tr').length == 1 && !/Uso de brazos: /.test(d.getElementById('sjind').textContent) && /Índice elástico: /.test(d.getElementById('sjind').textContent));
   // Quitar vídeo
   clk('[data-a=sjx]'); T('«Quitar vídeo» libera el vídeo y lo deja todo en marcha', !d.getElementById('sjv') && ev('sj.url') == '' && /Elegir vídeo/.test(P()));
   // Cambiar de paciente: el vídeo y las marcas no pasan de uno a otro
@@ -119,7 +129,7 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   // ---- Datos: registro propio, cerrar y abrir ----
   await flush();
   const regs = await H.Datos.registros(0), rs = regs.filter(x => x.kind == 'salto');
-  T('cada salto es un registro propio de tipo «salto» colgando del paciente (el paciente no lo lleva dentro)', rs.length == 4 && rs.every(x => x.parent == cid) && !('saltos' in regs.find(x => x.kind == 'client' && x.id == cid).data));
+  T('cada salto es un registro propio de tipo «salto» colgando del paciente (el paciente no lo lleva dentro)', rs.length == S().clients[0].saltos.length && rs.length == 6 && rs.every(x => x.parent == cid) && !('saltos' in regs.find(x => x.kind == 'client' && x.id == cid).data));
   const antes = J(S().clients[0].saltos);
   close();
   const H2 = open({ idb, seed: false, before: stubs }); await H2.ready();

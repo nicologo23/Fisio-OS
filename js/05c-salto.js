@@ -7,7 +7,7 @@ const SJ_TIPOS=['CMJ','SJ','Abalakov','Drop jump','Otro'];
 const SJ_G=9.81;
 const sjRecordado=()=>{try{const n=Number(localStorage.getItem('plan_sjfps'));return n>=1&&n<=2000?n:0}catch(e){return 0}};   // último valor elegido en este dispositivo (clave opcional)
 const sjGuardaFps=n=>{try{localStorage.setItem('plan_sjfps',String(n))}catch(e){}};
-let sj={conf:false,c:'',url:'',name:'',est:'',ok:false,cabOk:null,meta:false,id:0,auto:null,dt:0,irr:false,n:0,fps:240,tipo:'CMJ',date:'',fd:null,fa:null,fc:null,note:'',dur:0,real:null,err:''};
+let sj={conf:false,c:'',url:'',name:'',est:'',ok:false,cabOk:null,meta:false,id:0,auto:null,dt:0,irr:false,n:0,fps:240,tipo:'CMJ',date:'',fd:null,fa:null,fc:null,note:'',dur:0,real:null,err:'',del:'',cmp:''};
 sj.fps=sjRecordado()||240;
 
 const sjFr=(x,d=1)=>(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -84,7 +84,7 @@ const SJ_IUB=[[-1e9,'Negativo','ABK inferior al CMJ','Revisar ejecución, dolor 
   [30,'Muy elevada','Contribución muy elevada','Revisar también el rendimiento del CMJ sin brazos.']];
 const sjInterp=(T,x)=>{if(x==null||!isFinite(x))return null;let r=T[0];T.forEach(f=>{if(x>=f[0])r=f});return{corto:r[1],txt:r[2],ver:r[3]}};
 const sjRangoTxt=T=>T.map((f,i)=>{const lo=f[0]<-1e8?null:f[0],hi=T[i+1]?T[i+1][0]:null;return(lo==null?'Menos de 0 %':hi==null?'Más de '+lo+' %':lo+'–'+hi+' %')+': <b>'+f[2]+'</b>. '+f[3]}).map(x=>'<li>'+x+'</li>').join('');
-function sjAjustar(c){if(sj.c!=c.id){sjSoltar();sj.c=c.id;sj.date=today();sj.tipo='CMJ';sj.fd=sj.fa=sj.fc=null;sj.note=''}if(!sj.date)sj.date=today()}
+function sjAjustar(c){if(sj.c!=c.id){sjSoltar();sj.c=c.id;sj.date=today();sj.tipo='CMJ';sj.fd=sj.fa=sj.fc=null;sj.note='';sj.del='';sj.cmp=''}if(!sj.date)sj.date=today()}
 function sjSoltar(){if(sj.url){try{URL.revokeObjectURL(sj.url)}catch(e){}}sj.url='';sj.name='';sj.est='';sj.ok=false;clearTimeout(sj.tm);sj.medido=false;sj.cabOk=null;sj.meta=false;sj.dt=0;sj.irr=false;sj.auto=null;sj.conf=false;sj.id++;sj.n=0;sj.dur=0;sj.real=null;sj.err=''}
 const sjV=()=>$('#sjv');
 // Dos relojes distintos: la LÍNEA DE TIEMPO DEL VÍDEO (sj.dt = segundos del vídeo entre un fotograma y el siguiente, medido) y el TIEMPO REAL
@@ -165,16 +165,20 @@ function sjPintar(){
   const r=$('#sjr');if(r){r.max=Math.max(0,sjTot()-1);r.value=sj.n}}
 function sjListaHTML(c){
   const L=sjDe(c);if(!L.length)return'<p class="mut pcn">Todavía no hay saltos guardados.</p>';
-  return`<ul class="sjl">${L.map(s=>{const r=sjRes(s);return`<li><div class="sjla"><b>${r.ok?sjFr(r.h)+' cm':'—'}</b> <span class="sjtp">${esc(s.tipo)}</span><div class="mut sjsub">${esc(fmtC(s.date)||s.date)} · ${r.ok?'vuelo '+sjFr(r.t,3)+' s':'sin resultado'} · ${sjFr(s.fps,0)} fps${r.tc!=null?` · contacto ${sjFr(r.tc,3)} s · RSI ${sjFr(r.rsi,2)}`:''}</div>${s.note?`<div class="sjnt">${esc(s.note)}</div>`:''}</div><button class="chip" data-a="sjdel" data-id="${esc(s.id)}" aria-label="Eliminar salto">${ic('trash',18)}</button></li>`}).join('')}</ul>`}
+  return`<ul class="sjl">${L.map(s=>{const r=sjRes(s);return`<li><div class="sjla"><b>${r.ok?sjFr(r.h)+' cm':'—'}</b> <span class="sjtp">${esc(s.tipo)}</span><div class="mut sjsub">${esc(fmtC(s.date)||s.date)} · ${r.ok?'vuelo '+sjFr(r.t,3)+' s':'sin resultado'} · ${sjFr(s.fps,0)} fps${r.tc!=null?` · contacto ${sjFr(r.tc,3)} s · RSI ${sjFr(r.rsi,2)}`:''}</div>${s.note?`<div class="sjnt">${esc(s.note)}</div>`:''}</div>${s.id==sj.del?`<div class="sjdq"><span>¿Eliminar?</span><button class="chip sjbad" data-a="sjdel2" data-id="${esc(s.id)}">Sí, eliminar</button><button class="chip" data-a="sjdelx">No</button></div>`:`<button class="chip" data-a="sjdel" data-id="${esc(s.id)}" aria-label="Eliminar salto">${ic('trash',18)}</button>`}</li>`}).join('')}</ul>`}
 function sjIndHTML(c){
   const S=sjSesiones(c);if(!S.length)return'<p class="mut pcn">Cuando guardes saltos aparecerán aquí la mejor altura de cada tipo y las comparativas.</p>';
   const f=(x,d=1,u='')=>x==null?'<span class="mut">—</span>':sjFr(x,d)+u;
   const ce=(x,T)=>{const i=sjInterp(T,x);return f(x,1,' %')+(i?`<div class="sjtag">${i.corto}</div>`:'')};
-  const U=S[0],ie=sjInterp(SJ_IE,U.elas),iu=sjInterp(SJ_IUB,U.brazos);
+  // Fecha del test: por defecto la más reciente; «Todas» enseña un día por fila. Si la fecha elegida ya no existe, vuelve a la más reciente.
+  let sel=sj.cmp;if(sel!='all'&&!S.some(d=>d.date==sel))sel=S[0].date;
+  const R=sel=='all'?S:S.filter(d=>d.date==sel);
+  const U=R[0],ie=sjInterp(SJ_IE,U.elas),iu=sjInterp(SJ_IUB,U.brazos);
   const blq=(nom,v,i)=>i?`<div class="sjit"><div><b>${nom}: ${sjFr(v,1)} %</b> · ${i.txt}</div><div class="mut">Aspectos que valorar: ${i.ver}</div></div>`:'';
   const interp=blq('Índice elástico',U.elas,ie)+blq('Uso de brazos',U.brazos,iu);
-  return`<div class="sjtw"><table class="prtb"><thead><tr><th>Día</th><th>SJ</th><th>CMJ</th><th>Abalakov</th><th>Índice elástico</th><th>Uso de brazos</th></tr></thead><tbody>${S.map(d=>`<tr><td>${esc(fmtC(d.date)||d.date)}</td><td>${f(d.best.SJ)}</td><td>${f(d.best.CMJ)}</td><td>${f(d.best.Abalakov)}</td><td>${ce(d.elas,SJ_IE)}</td><td>${ce(d.brazos,SJ_IUB)}</td></tr>`).join('')}</tbody></table></div>
-  ${interp?`<div class="sjint"><div class="lb">Interpretación · ${esc(fmtC(U.date)||U.date)}</div>${interp}</div>`:''}
+  return`<label class="lb sjcm">Fecha del test<select id="sjcmp">${S.map(d=>`<option value="${esc(d.date)}"${d.date==sel?' selected':''}>${esc(fmtC(d.date)||d.date)}</option>`).join('')}<option value="all"${sel=='all'?' selected':''}>Todas las fechas</option></select></label>
+  <div class="sjtw"><table class="prtb"><thead><tr><th>Día</th><th>SJ</th><th>CMJ</th><th>Abalakov</th><th>Índice elástico</th><th>Uso de brazos</th></tr></thead><tbody>${R.map(d=>`<tr><td>${esc(fmtC(d.date)||d.date)}</td><td>${f(d.best.SJ)}</td><td>${f(d.best.CMJ)}</td><td>${f(d.best.Abalakov)}</td><td>${ce(d.elas,SJ_IE)}</td><td>${ce(d.brazos,SJ_IUB)}</td></tr>`).join('')}</tbody></table></div>
+  ${interp?`<div class="sjint"><div class="lb">Interpretación · ${esc(fmtC(U.date)||U.date)}</div>${interp}</div>`:`<p class="mut prnote">Para calcular los índices ese día hacen falta saltos SJ y CMJ (índice elástico) o CMJ y Abalakov (uso de brazos).</p>`}
   <details class="sjtips"><summary>Ver todos los rangos de interpretación</summary><div class="lb">Índice elástico</div><ul>${sjRangoTxt(SJ_IE)}</ul><div class="lb">Uso de brazos</div><ul>${sjRangoTxt(SJ_IUB)}</ul></details>
   <p class="mut prnote">Alturas en cm; se usa el mejor salto de cada tipo del día. Índice elástico = (CMJ − SJ) / SJ × 100. Uso de brazos = (Abalakov − CMJ) / CMJ × 100. Los intervalos son <b>orientativos y descriptivos</b>: no son puntos de corte validados ni permiten diagnosticar por sí solos.</p>`}
 function sjListasPintar(){const c=cc();if(!c)return;const a=$('#sjlist'),b=$('#sjind');if(a)a.innerHTML=sjListaHTML(c);if(b)b.innerHTML=sjIndHTML(c)}
@@ -207,7 +211,10 @@ function sjAccion(a,b){
   if(a=='sjm'){if(!sj.url){flash('Primero elige un vídeo');return true}sj[b.dataset.v]=sj.n;sjPintar();return true}
   if(a=='sjg'){const n=sj[b.dataset.v];if(n!=null)sjIr(n);return true}
   if(a=='sjx'){sjSoltar();sj.fd=sj.fa=sj.fc=null;render();return true}
-  if(a=='sjdel'){const i=(c.saltos||[]).findIndex(s=>s.id==b.dataset.id);if(i<0)return true;if(!confirm('¿Eliminar este salto? Esta acción no se puede deshacer.'))return true;c.saltos.splice(i,1);if(!c.saltos.length)delete c.saltos;save();sjListasPintar();flash('Salto eliminado');return true}
+  // Confirmación dentro de la pantalla (no confirm(): hay entornos, como la vista previa o algunas PWA, que lo bloquean sin avisar)
+  if(a=='sjdel'){sj.del=b.dataset.id;sjListasPintar();return true}
+  if(a=='sjdelx'){sj.del='';sjListasPintar();return true}
+  if(a=='sjdel2'){sj.del='';const i=(c.saltos||[]).findIndex(s=>s.id==b.dataset.id);if(i<0){sjListasPintar();return true}c.saltos.splice(i,1);if(!c.saltos.length)delete c.saltos;save();sjListasPintar();flash('Salto eliminado');return true}
   if(a=='sjsave'){
     if(sj.url&&!sj.conf){flash('Elige primero los fotogramas por segundo');return true}
     const r=sjRes(sj);if(!r.ok){flash(r.msg||'Faltan marcas');return true}
@@ -226,6 +233,7 @@ function sjInput(t){
   if(t.id=='sjfps'){const n=sjFps(t.value);if(n){sj.fps=n;sj.conf=true;sjGuardaFps(n);const e=$('#sjfc .segc');if(e)e.querySelectorAll('button').forEach(x=>x.classList.toggle('on',+x.dataset.v==n));sjIr(sj.n);if(sj.meta)sjInforme()}return true}
   if(t.id=='sjtipo'){sj.tipo=t.value;if(sj.tipo!='Drop jump')sj.fc=null;sjPintar();return true}
   if(t.id=='sjd'){sj.date=t.value;return true}
+  if(t.id=='sjcmp'){sj.cmp=t.value;sjListasPintar();return true}
   if(t.id=='sjnote'){sj.note=t.value;return true}
   if(t.id=='sjr'){sjIr(+t.value);return true}
   const m=/^sjm-(fd|fa|fc)$/.exec(t.id);if(m){sj[m[1]]=sjEnt(t.value.trim());sjPintar();return true}
