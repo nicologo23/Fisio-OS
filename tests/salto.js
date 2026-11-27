@@ -32,6 +32,13 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   tab('cli'); clk(`#plist [data-a=selc][data-id=${cid}]`); clk('[data-a=ptab][data-v=sal]');
   w.__f.name = 'clip120.mov'; const f0 = d.getElementById('sjf'); Object.defineProperty(f0, 'files', { value: [w.__f] }); f0.dispatchEvent(new w.Event('change', { bubbles: true })); await ready(300);
   T('al elegir el archivo: fps puestos a 120 por el sonido y paso de fotograma 1/30 s de vídeo', ev('sj.fps') == 120 && d.getElementById('sjfps').value == '120' && near(ev('sj.dt'), 1 / 30, 1e-4) && ev('sj.auto.fps') == 120);
+  T('clip con el sonido de la misma duración que el vídeo (como al recortar en Fotos): fps NO se deducen, hay que elegirlos', (() => { w.localStorage.setItem('plan_sjfps', '240'); ev('sj.fps=240'); return true; })());
+  for (const [fx, patron, nm] of [['salto-sonido-estirado.mp4', /dura lo mismo/, 'sonido estirado'], ['salto-sin-sonido.mp4', /no trae sonido|No he podido medir/, 'sin sonido']]) {
+    const b2 = require('fs').readFileSync(require('path').join(__dirname, fx)); w.__f2 = { name: fx, size: b2.length, slice: (a, z) => ({ arrayBuffer: async () => b2.buffer.slice(b2.byteOffset + a, b2.byteOffset + Math.min(z, b2.length)) }) };
+    const e2 = d.getElementById('sjf'); Object.defineProperty(e2, 'files', { value: [w.__f2], configurable: true }); e2.dispatchEvent(new w.Event('change', { bubbles: true })); await ready(300);
+    ev('sj.meta=true;sj.dur=1.5;sjDecidir()'); ev('sjInforme()');
+    T(nm + ': no se fija ningún fps, queda sin confirmar y el texto pide elegirlo', ev('sj.conf') === false && ev('sj.fps') == 240 && patron.test(d.getElementById('sjest').textContent) && /Elige arriba/.test(d.getElementById('sjinfo').textContent));
+  }
   ev('sjSoltar()'); ev("sj.fps=240");
   // ---- Pantalla ----
   tab('cli'); clk(`#plist [data-a=selc][data-id=${cid}]`); clk('[data-a=ptab][data-v=sal]');
@@ -44,6 +51,13 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   T('al elegir el vídeo aparece el reproductor con su nombre y los botones de paso', !!d.getElementById('sjv') && /salto1\.mov/.test(P()) && d.querySelectorAll('[data-a=sjs]').length == 4 && /Quitar vídeo/.test(P()));
   ev('sj.dur=4'); w.sjIr(0);
   T('960 fotogramas (del 0 al 959); el contador empieza en el 0', ev('sjTot()') == 960 && /Fotograma 0/.test(d.getElementById('sjinfo').textContent) && /de 959/.test(d.getElementById('sjinfo').textContent));
+  // Sin confirmar los fps (el archivo no los dice) no se enseña ninguna altura
+  ev('sj.fd=100;sj.fa=220;sjPintar()');
+  T('con vídeo y sin elegir los fotogramas por segundo: pide elegirlos y no enseña altura', /Elige arriba/.test(d.getElementById('sjinfo').textContent) && !/Altura/.test(d.getElementById('sjinfo').textContent) && d.querySelectorAll('[data-a=sjf]').length == 4 && !d.querySelector('[data-a=sjf].on'));
+  clk('[data-a=sjsave]'); T('y tampoco deja guardar', !(S().clients[0].saltos || []).length);
+  clk('[data-a=sjf][data-v="120"]'); T('botón 120: se marca, se confirma y se recuerda en este dispositivo', ev('sj.fps') == 120 && ev('sj.conf') === true && d.querySelector('[data-a=sjf].on').dataset.v == '120' && w.localStorage.getItem('plan_sjfps') == '120' && /30,7|122,6|Altura/.test(d.getElementById('sjinfo').textContent));
+  clk('[data-a=sjf][data-v="240"]'); T('botón 240 y el campo «otro valor» se sincronizan', d.getElementById('sjfps').value == '240' && ev('sj.fps') == 240);
+  ev('sj.fd=null;sj.fa=null;sjPintar()');
   clk('[data-a=sjs][data-v="10"]'); clk('[data-a=sjs][data-v="1"]'); clk('[data-a=sjs][data-v="-1"]');
   T('+10, +1 y −1 fotograma → 10; el contador y el deslizador lo reflejan', ev('sj.n') == 10 && /Fotograma 10/.test(d.getElementById('sjinfo').textContent) && d.getElementById('sjr').value == '10');
   clk('[data-a=sjs][data-v="-10"]'); clk('[data-a=sjs][data-v="-10"]');

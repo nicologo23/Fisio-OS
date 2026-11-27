@@ -5,7 +5,10 @@
 //   Lo demás (tiempo de vuelo, altura, RSI…) se CALCULA al mostrarlo, nunca se guarda: así no puede quedar desfasado.
 const SJ_TIPOS=['CMJ','SJ','Abalakov','Drop jump','Otro'];
 const SJ_G=9.81;
-let sj={c:'',url:'',name:'',est:'',ok:false,cabOk:null,meta:false,id:0,auto:null,dt:0,irr:false,n:0,fps:240,tipo:'CMJ',date:'',fd:null,fa:null,fc:null,note:'',dur:0,real:null,err:''};
+const sjRecordado=()=>{try{const n=Number(localStorage.getItem('plan_sjfps'));return n>=1&&n<=2000?n:0}catch(e){return 0}};   // último valor elegido en este dispositivo (clave opcional)
+const sjGuardaFps=n=>{try{localStorage.setItem('plan_sjfps',String(n))}catch(e){}};
+let sj={conf:false,c:'',url:'',name:'',est:'',ok:false,cabOk:null,meta:false,id:0,auto:null,dt:0,irr:false,n:0,fps:240,tipo:'CMJ',date:'',fd:null,fa:null,fc:null,note:'',dur:0,real:null,err:''};
+sj.fps=sjRecordado()||240;
 
 const sjFr=(x,d=1)=>(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 const sjEnt=v=>{const n=Number(v);return v!==''&&v!=null&&Number.isInteger(n)&&n>=0&&n<=10000000?n:null};
@@ -42,7 +45,7 @@ const sjAjusta=x=>{let b=null;for(const n of sjFpsNormales)if(Math.abs(x/n-1)<0.
 async function sjLeer(f,id){
   let h=null;try{h=await sjCabecera(f)}catch(e){}
   if(id!==sj.id)return;
-  if(h&&h.adur>0&&h.n>0){const real=h.n/h.adur,fp=sjAjusta(real);sj.auto={n:h.n,adur:h.adur,vdur:h.vdur,real:real,fps:fp};if(fp){sj.fps=fp;const i=$('#sjfps');if(i)i.value=fp}}
+  if(h&&h.adur>0&&h.n>0){const real=h.n/h.adur,fp=sjAjusta(real);sj.auto={n:h.n,adur:h.adur,vdur:h.vdur,real:real,fps:fp};if(fp&&!(h.vdur>0&&Math.abs(h.adur/h.vdur-1)<0.03)){sj.fps=fp;sj.conf=true;const i=$('#sjfps');if(i)i.value=fp;sjGuardaFps(fp);sjFpsPintar()}}
   else if(h)sj.auto={n:h.n,adur:0,vdur:h.vdur};
   if(h&&h.dt>=0.0004&&h.dt<=0.2){sj.dt=h.dt;sj.irr=h.irr}   // la cabecera dice cada cuánto va cada fotograma: no hace falta reproducir para medir
   sj.cabOk=!!sj.dt;sjDecidir()}
@@ -67,7 +70,7 @@ function sjSesiones(c){
     return d})}
 
 function sjAjustar(c){if(sj.c!=c.id){sjSoltar();sj.c=c.id;sj.date=today();sj.tipo='CMJ';sj.fd=sj.fa=sj.fc=null;sj.note=''}if(!sj.date)sj.date=today()}
-function sjSoltar(){if(sj.url){try{URL.revokeObjectURL(sj.url)}catch(e){}}sj.url='';sj.name='';sj.est='';sj.ok=false;clearTimeout(sj.tm);sj.medido=false;sj.cabOk=null;sj.meta=false;sj.dt=0;sj.irr=false;sj.auto=null;sj.id++;sj.n=0;sj.dur=0;sj.real=null;sj.err=''}
+function sjSoltar(){if(sj.url){try{URL.revokeObjectURL(sj.url)}catch(e){}}sj.url='';sj.name='';sj.est='';sj.ok=false;clearTimeout(sj.tm);sj.medido=false;sj.cabOk=null;sj.meta=false;sj.dt=0;sj.irr=false;sj.auto=null;sj.conf=false;sj.id++;sj.n=0;sj.dur=0;sj.real=null;sj.err=''}
 const sjV=()=>$('#sjv');
 // Dos relojes distintos: la LÍNEA DE TIEMPO DEL VÍDEO (sj.dt = segundos del vídeo entre un fotograma y el siguiente, medido) y el TIEMPO REAL
 // (cada fotograma dura 1/sj.fps s reales, con sj.fps = fotogramas por segundo a los que se grabó). El iPhone puede entregar el vídeo
@@ -112,18 +115,21 @@ function sjVerificar(v,fin){
 function sjInforme(){
   const v=sjV(),dt=sjDt(),fv=1/dt,tot=sjTot(),A=sj.auto;let m='Vídeo listo: '+(v?v.videoWidth+'×'+v.videoHeight+' px, ':'')+sjFr(sj.dur,2)+' s de vídeo'+(sj.dt?', '+tot+' fotogramas':'')+'. ',mal=false;
   if(A&&A.adur>0){
-    m+='Por el sonido, el clip duró '+sjFr(A.adur,2)+' s reales: '+A.n+' fotogramas en ese tiempo son unos '+sjFr(A.real,0)+' por segundo'+(A.fps?', así que se grabó a '+A.fps+' fps':'')+'. ';
-    if(A.vdur>0&&Math.abs(A.adur/A.vdur-1)<0.03&&A.fps&&A.fps<=60){m+='⚠ El sonido dura lo mismo que el vídeo: o es un vídeo normal, o el iPhone lo ha convertido y ha estirado también el sonido, y entonces no hay forma de saber los fps reales por el archivo. Si era cámara lenta, pon a mano los fps con los que grabaste (120 o 240) y comprueba que el tiempo en el aire sale entre 0,3 y 0,7 s.';mal=true}
+    const igual=A.vdur>0&&Math.abs(A.adur/A.vdur-1)<0.03;
+    if(!igual)m+='Por el sonido, el clip duró '+sjFr(A.adur,2)+' s reales: '+A.n+' fotogramas en ese tiempo son unos '+sjFr(A.real,0)+' por segundo'+(A.fps?', así que se grabó a '+A.fps+' fps':'')+'. ';
+    if(A.vdur>0&&Math.abs(A.adur/A.vdur-1)<0.03){m+='⚠ El sonido dura lo mismo que el vídeo: o es un vídeo normal, o el iPhone lo ha convertido (por ejemplo al recortarlo en Fotos) y ha estirado también el sonido. En ese caso el archivo no dice a qué velocidad se grabó: elige tú abajo los fotogramas por segundo (30 o 60 si era normal; 120 o 240 si era cámara lenta).';mal=true}
     else if(A.fps&&sj.fps==A.fps)m+='Ya he puesto '+A.fps+' fotogramas por segundo abajo.';
     else if(A.fps){m+='⚠ Abajo tienes '+sj.fps+'; si no lo cambiaste tú a propósito, vuelve a poner '+A.fps+'.';mal=true}
     else{m+='⚠ No coincide con una velocidad de grabación habitual: revisa los fotogramas por segundo de abajo.';mal=true}}
-  else if(!sj.dt)m+='No he podido medir sus fotogramas; se supone '+sj.fps+' por segundo.';
-  else{m+='Su línea de tiempo trae '+sjFr(fv,0)+' fotogramas por segundo: a '+sj.fps+' fps serían '+sjFr(tot/sj.fps,2)+' s reales.';if(Math.abs(fv/sj.fps-1)>0.03){m+=' ⚠ No coincide con los '+sj.fps+' fps indicados (vídeo ralentizado o con fotogramas descartados): comprueba que esos segundos reales cuadran con lo que duró tu clip.';mal=true}}
+  else if(!sj.dt)m+='No he podido medir sus fotogramas. Elige abajo a cuántos fotogramas por segundo grabaste.';
+  else{m+='Este vídeo no trae sonido, así que no puedo saber a qué velocidad se grabó (su línea de tiempo va a '+sjFr(fv,0)+' fotogramas por segundo). Elige abajo cómo lo grabaste: 30 o 60 si era normal; 120 o 240 si era cámara lenta.';mal=true}
   if(sj.irr){m+=' ⚠ La velocidad del vídeo no es uniforme (cámara lenta aplicada a trozos): las medidas no serían fiables. Usa el vídeo original sin editar.';mal=true}
   sjEst(m,mal)}
 function sjEsperar(){clearTimeout(sj.tm);sj.tm=setTimeout(()=>{if(sj.url&&!sj.ok)sjEst('El vídeo todavía no se ha abierto. Si es muy largo o pesado, espera unos segundos más. Si no aparece, prueba a elegirlo desde la app Archivos o a grabar un clip más corto.',true)},8000)}
 function sjErr(){const v=sjV(),c=v&&v.error?v.error.code:'?';sj.err='Este navegador no ha podido abrir ese vídeo (código '+c+'). Prueba con el archivo original de la cámara (.mov o .mp4).';const e=$('#sjerr');if(e)e.textContent=sj.err;sjEst('No se pudo abrir el vídeo.',true)}
 
+function sjFpsHTML(){return`<div class="segc sjfcs" role="group" aria-label="Fotogramas por segundo">${[30,60,120,240].map(n=>`<button data-a="sjf" data-v="${n}" class="${sj.conf&&sj.fps==n?'on':''}">${n}</button>`).join('')}</div><label class="lb sjfo">Otro valor<input id="sjfps" inputmode="decimal" value="${sj.fps}"></label>`}
+function sjFpsPintar(){const e=$('#sjfc');if(e)e.innerHTML=sjFpsHTML()}
 function sjMarcasHTML(){
   const m=[['fd','Despegue','Primer fotograma con los pies en el aire'],['fa','Aterrizaje','Primer fotograma con los pies en contacto']];
   if(sj.tipo=='Drop jump')m.unshift(['fc','Contacto inicial','Primer fotograma al caer desde el cajón']);
@@ -133,9 +139,10 @@ function sjInfoHTML(){
   let h=`<div class="sjn"><b>Fotograma ${sj.n}</b>${t?` <span class="mut">de ${t-1}</span>`:''}${sj.fps?` · <span class="mut">${sjFr(sj.n/sj.fps,3)} s</span>`:''}</div>`;
   if(desv)h+=`<div class="sjw">⚠ El vídeo está en el fotograma ${sj.real}, no en el ${sj.n}. Revisa los fotogramas por segundo del vídeo.</div>`;
   h+=`<div class="sjmk">${sjMarcasHTML()}</div>`;
-  if(r.ok){h+=`<div class="sjrs"><div><span class="mut">Tiempo de vuelo</span><b>${sjFr(r.t,3)} s</b><small>${r.fv} fotogramas</small></div><div><span class="mut">Altura</span><b>${sjFr(r.h)} cm</b></div>`+(r.tc!=null?`<div><span class="mut">Contacto</span><b>${sjFr(r.tc,3)} s</b><small>${r.fcn} fotogramas</small></div><div><span class="mut">RSI</span><b>${sjFr(r.rsi,2)}</b></div>`:'')+`</div>`}
-  if(r.ok&&(r.h>70||r.h<3||r.t<0.2||r.t>0.75))h+=`<p class="sjw">⚠ ${sjFr(r.h)} cm (${sjFr(r.t,3)} s en el aire) es poco creíble para un salto. Revisa que despegue y aterrizaje estén bien marcados y que los fotogramas por segundo (${sj.fps}) sean los de la cámara: un salto normal dura en el aire entre 0,3 y 0,7 s, y con ${r.fv} fotogramas eso corresponde a unos ${sjFr(r.fv/0.7,0)}–${sjFr(r.fv/0.3,0)} fps.</p>`;
-  if(r.msg)h+=`<p class="mut pcn sjhint">${r.msg}</p>`;
+  if(sj.url&&!sj.conf)h+=`<p class="sjw">Elige arriba a cuántos fotogramas por segundo grabaste el vídeo (30 o 60 si era un vídeo normal; 120 o 240 si era cámara lenta) para ver la altura.</p>`;
+  else if(r.ok){h+=`<div class="sjrs"><div><span class="mut">Tiempo de vuelo</span><b>${sjFr(r.t,3)} s</b><small>${r.fv} fotogramas</small></div><div><span class="mut">Altura</span><b>${sjFr(r.h)} cm</b></div>`+(r.tc!=null?`<div><span class="mut">Contacto</span><b>${sjFr(r.tc,3)} s</b><small>${r.fcn} fotogramas</small></div><div><span class="mut">RSI</span><b>${sjFr(r.rsi,2)}</b></div>`:'')+`</div>`}
+  if(r.ok&&(sj.conf||!sj.url)&&(r.h>70||r.h<3||r.t<0.2||r.t>0.75))h+=`<p class="sjw">⚠ ${sjFr(r.h)} cm (${sjFr(r.t,3)} s en el aire) es poco creíble para un salto. Revisa que despegue y aterrizaje estén bien marcados y que los fotogramas por segundo (${sj.fps}) sean los de la cámara: un salto normal dura en el aire entre 0,3 y 0,7 s, y con ${r.fv} fotogramas eso corresponde a unos ${sjFr(r.fv/0.7,0)}–${sjFr(r.fv/0.3,0)} fps.</p>`;
+  if(r.msg&&(sj.conf||!sj.url))h+=`<p class="mut pcn sjhint">${r.msg}</p>`;
   return h}
 function sjPintar(){
   const e=$('#sjinfo');if(e&&!(document.activeElement&&e.contains(document.activeElement)&&document.activeElement.tagName=='INPUT'))e.innerHTML=sjInfoHTML();
@@ -163,7 +170,8 @@ function paSalto(c){
   ${sj.url?`<div id="sjest" class="mut sjest">${esc(sj.est)}</div>`:''}
   ${v}
   <div id="sjinfo">${sjInfoHTML()}</div>
-  <div class="sjpar"><label class="lb">Fotogramas por segundo del vídeo<input id="sjfps" inputmode="decimal" value="${sj.fps}"></label><label class="lb">Tipo de salto<select id="sjtipo">${SJ_TIPOS.map(t=>`<option${t==sj.tipo?' selected':''}>${t}</option>`).join('')}</select></label><label class="lb">Fecha<input id="sjd" type="date" max="${today()}" value="${esc(sj.date)}"></label></div>
+  <div class="sjfq"><div class="lb">¿A cuántos fotogramas por segundo grabaste?</div><div id="sjfc">${sjFpsHTML()}</div></div>
+  <div class="sjpar"><label class="lb">Tipo de salto<select id="sjtipo">${SJ_TIPOS.map(t=>`<option${t==sj.tipo?' selected':''}>${t}</option>`).join('')}</select></label><label class="lb">Fecha<input id="sjd" type="date" max="${today()}" value="${esc(sj.date)}"></label></div>
   <label class="lb sjnl">Nota (opcional)<input id="sjnote" maxlength="200" autocomplete="off" value="${esc(sj.note)}"></label>
   <div class="row sjgd"><button class="pri" data-a="sjsave">Guardar salto</button></div></div>
   <div class="card pcd"><div class="pct">${ic('clock',20)}<b>Saltos guardados</b></div><div id="sjlist">${sjListaHTML(c)}</div></div>
@@ -172,12 +180,14 @@ function paSalto(c){
 // Acciones (data-a="sj…") y campos
 function sjAccion(a,b){
   const c=cc();if(!c)return false;
+  if(a=='sjf'){sj.fps=+b.dataset.v;sj.conf=true;sjGuardaFps(sj.fps);sjFpsPintar();sjIr(sj.n);if(sj.meta)sjInforme();return true}
   if(a=='sjs'){sjIr(sj.n+(+b.dataset.v));return true}
   if(a=='sjm'){if(!sj.url){flash('Primero elige un vídeo');return true}sj[b.dataset.v]=sj.n;sjPintar();return true}
   if(a=='sjg'){const n=sj[b.dataset.v];if(n!=null)sjIr(n);return true}
   if(a=='sjx'){sjSoltar();sj.fd=sj.fa=sj.fc=null;render();return true}
   if(a=='sjdel'){const i=(c.saltos||[]).findIndex(s=>s.id==b.dataset.id);if(i<0)return true;if(!confirm('¿Eliminar este salto? Esta acción no se puede deshacer.'))return true;c.saltos.splice(i,1);if(!c.saltos.length)delete c.saltos;save();sjListasPintar();flash('Salto eliminado');return true}
   if(a=='sjsave'){
+    if(sj.url&&!sj.conf){flash('Elige primero los fotogramas por segundo');return true}
     const r=sjRes(sj);if(!r.ok){flash(r.msg||'Faltan marcas');return true}
     if(sj.tipo=='Drop jump'&&sj.fc==null){flash('Marca el contacto inicial');return true}
     if(sj.tipo=='Drop jump'&&r.tc==null){flash(r.msg);return true}
@@ -191,7 +201,7 @@ function sjAccion(a,b){
 function sjInput(t){
   if(!t||!t.id)return false;
   if(t.id=='sjf'){const f=t.files&&t.files[0];if(!f)return true;sjSoltar();sj.url=URL.createObjectURL(f);sj.name=f.name;sj.n=0;sj.fd=sj.fa=sj.fc=null;sj.est='Cargando «'+f.name+'» ('+sjFr((f.size||0)/1048576,1)+' MB)…';render();sjEsperar();sjLeer(f,sj.id);return true}
-  if(t.id=='sjfps'){const n=sjFps(t.value);if(n){sj.fps=n;sjIr(sj.n)}return true}
+  if(t.id=='sjfps'){const n=sjFps(t.value);if(n){sj.fps=n;sj.conf=true;sjGuardaFps(n);const e=$('#sjfc .segc');if(e)e.querySelectorAll('button').forEach(x=>x.classList.toggle('on',+x.dataset.v==n));sjIr(sj.n);if(sj.meta)sjInforme()}return true}
   if(t.id=='sjtipo'){sj.tipo=t.value;if(sj.tipo!='Drop jump')sj.fc=null;sjPintar();return true}
   if(t.id=='sjd'){sj.date=t.value;return true}
   if(t.id=='sjnote'){sj.note=t.value;return true}

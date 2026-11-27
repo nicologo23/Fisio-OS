@@ -332,3 +332,4 @@ button.plink{min-height:0;padding:0;background:transparent;color:var(--ac);font-
 .sjtw{overflow-x:auto}
 .sjtips{margin:0 0 8px;font-size:13.5px}.sjtips summary{cursor:pointer;font-weight:600;padding:4px 0}.sjtips ul{margin:4px 0 0;padding-left:20px}.sjtips li{margin:3px 0}
 .sjest{font-size:13px;margin:0 0 6px}
+.sjfq{margin:8px 0}.sjfq .segc{margin:4px 0 6px}.sjfq .segc button{min-height:44px;font-variant-numeric:tabular-nums}.sjfo{max-width:180px}.sjfo input{width:100%}
