@@ -19,6 +19,9 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   T('drop jump sin contacto inicial, o con contacto después del despegue: avisa y no da RSI', R({ tipo: 'Drop jump', fd: 100, fa: 220 }).rsi === undefined && /contacto inicial/.test(R({ tipo: 'Drop jump', fd: 100, fa: 220 }).msg) && R({ tipo: 'Drop jump', fc: 120, fd: 100, fa: 220 }).rsi === undefined);
   T('otra velocidad de grabación (120 fps, mismos fotogramas) da otro tiempo: 1 s y 122,6 cm', near(ev("sjRes({fps:120,tipo:'CMJ',fd:0,fa:120}).t"), 1) && near(ev("sjRes({fps:120,tipo:'CMJ',fd:0,fa:120}).h"), 122.625));
 
+  // Línea de tiempo del vídeo (dt) distinta del tiempo real: se avanza por el vídeo y se calcula con los fps de la cámara
+  ev('sj.dur=16;sj.dt=1/60'); T('vídeo ralentizado (un fotograma cada 1/60 s de vídeo, 16 s): 960 fotogramas, y el fotograma n está en (n+0,5)/60 s', ev('sjTot()') == 960 && near(ev('sjT(10)'), 10.5 / 60)); ev('sj.dur=0;sj.dt=0');
+  T('sin medir, se supone que el vídeo va a los fps indicados', near(ev('sjDt()'), 1 / 240));
   // ---- Pantalla ----
   tab('cli'); clk(`#plist [data-a=selc][data-id=${cid}]`); clk('[data-a=ptab][data-v=sal]');
   const P = () => d.getElementById('ptabc').textContent;
@@ -38,6 +41,7 @@ H.run(async ({ w, d, clk, set, tab, T, errs, S, flush, ready, idb, close }) => {
   set('#sjr', '100'); T('el deslizador lleva al fotograma 100', ev('sj.n') == 100);
   clk('[data-a=sjm][data-v=fd]'); ev('sjIr(220)'); clk('[data-a=sjm][data-v=fa]');
   T('marcas: despegue 100, aterrizaje 220 → resultado en pantalla (0,500 s · 30,7 cm)', ev('sj.fd') == 100 && ev('sj.fa') == 220 && /0,500 s/.test(d.getElementById('sjinfo').textContent) && /30,7 cm/.test(d.getElementById('sjinfo').textContent));
+  ev('sj.fd=0;sj.fa=472;sjPintar()'); T('474 cm (472 fotogramas): avisa de que no es creíble', /poco creíble/.test(d.getElementById('sjinfo').textContent) && /474/.test(d.getElementById('sjinfo').textContent)); ev('sj.fd=100;sj.fa=220;sjPintar()');
   clk('[data-a=sjg][data-v=fd]'); T('«Ir» vuelve a la marca', ev('sj.n') == 100);
   set('#sjm-fa', '230'); T('la marca también se puede escribir a mano (230 → 0,542 s)', ev('sj.fa') == 230 && /0,542 s/.test(d.getElementById('sjinfo').textContent));
   set('#sjm-fa', '90'); T('aterrizaje antes del despegue: no hay resultado y lo dice', /posterior/.test(d.getElementById('sjinfo').textContent) && !/Altura/.test(d.getElementById('sjinfo').textContent));

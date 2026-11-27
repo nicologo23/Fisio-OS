@@ -5,7 +5,7 @@
 //   Lo demás (tiempo de vuelo, altura, RSI…) se CALCULA al mostrarlo, nunca se guarda: así no puede quedar desfasado.
 const SJ_TIPOS=['CMJ','SJ','Abalakov','Drop jump','Otro'];
 const SJ_G=9.81;
-let sj={c:'',url:'',name:'',est:'',ok:false,n:0,fps:240,tipo:'CMJ',date:'',fd:null,fa:null,fc:null,note:'',dur:0,real:null,err:''};
+let sj={c:'',url:'',name:'',est:'',ok:false,dt:0,irr:false,n:0,fps:240,tipo:'CMJ',date:'',fd:null,fa:null,fc:null,note:'',dur:0,real:null,err:''};
 
 const sjFr=(x,d=1)=>(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 const sjEnt=v=>{const n=Number(v);return v!==''&&v!=null&&Number.isInteger(n)&&n>=0&&n<=10000000?n:null};
@@ -31,20 +31,49 @@ function sjSesiones(c){
     return d})}
 
 function sjAjustar(c){if(sj.c!=c.id){sjSoltar();sj.c=c.id;sj.date=today();sj.tipo='CMJ';sj.fd=sj.fa=sj.fc=null;sj.note=''}if(!sj.date)sj.date=today()}
-function sjSoltar(){if(sj.url){try{URL.revokeObjectURL(sj.url)}catch(e){}}sj.url='';sj.name='';sj.est='';sj.ok=false;clearTimeout(sj.tm);sj.n=0;sj.dur=0;sj.real=null;sj.err=''}
+function sjSoltar(){if(sj.url){try{URL.revokeObjectURL(sj.url)}catch(e){}}sj.url='';sj.name='';sj.est='';sj.ok=false;clearTimeout(sj.tm);sj.dt=0;sj.irr=false;sj.n=0;sj.dur=0;sj.real=null;sj.err=''}
 const sjV=()=>$('#sjv');
-const sjTot=()=>sj.dur&&sj.fps?Math.max(1,Math.round(sj.dur*sj.fps)):0;
-const sjT=n=>(n+0.5)/sj.fps;        // se pide el centro del fotograma, así no depende de redondeos
+// Dos relojes distintos: la LÍNEA DE TIEMPO DEL VÍDEO (sj.dt = segundos del vídeo entre un fotograma y el siguiente, medido) y el TIEMPO REAL
+// (cada fotograma dura 1/sj.fps s reales, con sj.fps = fotogramas por segundo a los que se grabó). El iPhone puede entregar el vídeo
+// ya ralentizado, y entonces no coinciden: se avanza por la línea de tiempo del vídeo y se calcula con el tiempo real.
+const sjDt=()=>sj.dt||(sj.fps?1/sj.fps:0);
+const sjTot=()=>sj.dur&&sjDt()?Math.max(1,Math.round(sj.dur/sjDt())):0;
+const sjT=n=>(n+0.5)*sjDt();        // se pide el centro del fotograma, así no depende de redondeos
 function sjIr(n){const v=sjV();if(!v||!sj.url)return;const t=sjTot();n=Math.max(0,Math.min(t?t-1:0,Math.round(n)));sj.n=n;try{v.currentTime=sjT(n)}catch(e){}sjPintar()}
 // Fotograma en el que está de verdad el vídeo (puede no coincidir si los fotogramas por segundo no son los del vídeo)
-function sjSeek(){const v=sjV();if(!v)return;sj.real=Math.floor(v.currentTime*sj.fps+1e-3);sjPintar()}
+function sjSeek(){const v=sjV();if(!v)return;sj.real=Math.floor(v.currentTime/sjDt()+1e-3);sjPintar()}
 // Mensaje de estado de la carga (así se ve qué pasa si el móvil tarda o no puede abrir el vídeo)
 function sjEst(t,mal){sj.est=t;const e=$('#sjest');if(e){e.textContent=t;e.classList.toggle('sjw',!!mal)}}
-function sjMeta(){const v=sjV();if(!v)return;sj.dur=v.duration||0;sj.err='';sj.ok=true;clearTimeout(sj.tm);
-  sjEst('Vídeo listo: '+v.videoWidth+'×'+v.videoHeight+' px, '+sjFr(sj.dur,2)+' s. Con '+sj.fps+' fps son '+sjTot()+' fotogramas.');
-  // En iPhone el primer fotograma no se pinta hasta que el vídeo arranca una vez: se pone en marcha en silencio y se para
-  let p=null;try{p=v.play()}catch(e){}
-  if(p&&p.then)p.then(()=>{v.pause();sjIr(sj.n)}).catch(()=>sjIr(sj.n));else sjIr(sj.n)}
+function sjMeta(){const v=sjV();if(!v)return;sj.dur=v.duration||0;sj.err='';sj.ok=true;clearTimeout(sj.tm);sj.dt=0;sj.irr=false;
+  sjEst('Vídeo abierto ('+v.videoWidth+'×'+v.videoHeight+' px, '+sjFr(sj.dur,2)+' s). Midiendo sus fotogramas…');sjMedir(v)}
+// Mide cuánto dura un fotograma en la línea de tiempo del vídeo: se reproduce muy despacio y en silencio un instante y se anotan las marcas de tiempo
+function sjMedir(v){
+  let t=[],hecho=false,tm=0;
+  const fin=()=>{if(hecho)return;hecho=true;clearTimeout(tm);try{v.pause();v.playbackRate=1}catch(e){}
+    const d=[];for(let i=1;i<t.length;i++)if(t[i]>t[i-1])d.push(t[i]-t[i-1]);
+    if(d.length>=3){const m=Math.min.apply(null,d);if(m>=0.0004&&m<=0.2){sj.dt=m;sj.irr=d.some(x=>Math.abs(x/m-Math.round(x/m))>0.25)}}
+    const listo=()=>{sjInforme();if(sj.n>=sjTot())sj.n=0;sjIr(sj.n);const r=$('#sjr');if(r)r.max=Math.max(0,sjTot()-1)};
+    if(sj.dt&&!sj.irr)sjVerificar(v,listo);else listo()};
+  if(!('requestVideoFrameCallback' in v)){fin();return}
+  const cb=(now,md)=>{if(hecho)return;t.push(md.mediaTime);if(t.length>=30)fin();else v.requestVideoFrameCallback(cb)};
+  try{v.playbackRate=0.1;v.requestVideoFrameCallback(cb);const p=v.play();if(p&&p.catch)p.catch(fin);tm=setTimeout(fin,3500)}catch(e){fin()}}
+// Comprobación: en un vídeo uniforme, el fotograma n está en n·dt (respecto al primero). Si no, la cámara lenta está aplicada a trozos
+function sjVerificar(v,fin){
+  const tot=sjTot(),L=[0,Math.floor(tot/2),Math.floor(tot*0.75),tot-1].filter((x,i,a)=>a.indexOf(x)==i),dt=sj.dt,P={};let i=0,tm=0;
+  const sig=()=>{clearTimeout(tm);if(i>=L.length){const o=P[0];if(o!=null)for(const n of L)if(P[n]!=null&&Math.abs(P[n]-o-n*dt)>1.5*dt)sj.irr=true;fin();return}
+    const n=L[i++];let ok=false;const go=(now,md)=>{if(ok)return;ok=true;P[n]=md.mediaTime;sig()};
+    try{v.requestVideoFrameCallback(go);v.currentTime=(n+0.5)*dt}catch(e){ok=true;sig();return}
+    tm=setTimeout(()=>{if(!ok){ok=true;sig()}},900)};
+  if(!('requestVideoFrameCallback' in v)){fin();return}
+  sig()}
+function sjInforme(){
+  const v=sjV(),dt=sjDt(),fv=1/dt,tot=sjTot();let m='Vídeo listo: '+(v?v.videoWidth+'×'+v.videoHeight+' px, ':'')+sjFr(sj.dur,2)+' s de vídeo. ';
+  if(!sj.dt){sjEst(m+'No he podido medir sus fotogramas; se supone '+sj.fps+' por segundo ('+tot+' fotogramas).');return}
+  m+='Trae '+sjFr(fv,0)+' fotogramas por segundo de línea de tiempo ('+tot+' fotogramas en total), es decir, '+sjFr(tot/sj.fps,2)+' s reales a '+sj.fps+' fps.';
+  let mal=false;
+  if(sj.irr){m+=' ⚠ La velocidad del vídeo no es uniforme (el iPhone le ha aplicado la cámara lenta): las medidas no serían fiables. Usa el vídeo original sin editar.';mal=true}
+  else if(Math.abs(fv/sj.fps-1)>0.03){m+=' ⚠ No coincide con los '+sj.fps+' fps indicados: el vídeo está ralentizado o se han descartado fotogramas. Los fotogramas por segundo de abajo son los de la CÁMARA; si grabaste a 240 déjalo en 240 solo si los '+sjFr(tot/sj.fps,2)+' s reales cuadran con lo que duró tu clip.';mal=true}
+  sjEst(m,mal)}
 function sjEsperar(){clearTimeout(sj.tm);sj.tm=setTimeout(()=>{if(sj.url&&!sj.ok)sjEst('El vídeo todavía no se ha abierto. Si es muy largo o pesado, espera unos segundos más. Si no aparece, prueba a elegirlo desde la app Archivos o a grabar un clip más corto.',true)},8000)}
 function sjErr(){const v=sjV(),c=v&&v.error?v.error.code:'?';sj.err='Este navegador no ha podido abrir ese vídeo (código '+c+'). Prueba con el archivo original de la cámara (.mov o .mp4).';const e=$('#sjerr');if(e)e.textContent=sj.err;sjEst('No se pudo abrir el vídeo.',true)}
 
@@ -58,6 +87,7 @@ function sjInfoHTML(){
   if(desv)h+=`<div class="sjw">⚠ El vídeo está en el fotograma ${sj.real}, no en el ${sj.n}. Revisa los fotogramas por segundo del vídeo.</div>`;
   h+=`<div class="sjmk">${sjMarcasHTML()}</div>`;
   if(r.ok){h+=`<div class="sjrs"><div><span class="mut">Tiempo de vuelo</span><b>${sjFr(r.t,3)} s</b><small>${r.fv} fotogramas</small></div><div><span class="mut">Altura</span><b>${sjFr(r.h)} cm</b></div>`+(r.tc!=null?`<div><span class="mut">Contacto</span><b>${sjFr(r.tc,3)} s</b><small>${r.fcn} fotogramas</small></div><div><span class="mut">RSI</span><b>${sjFr(r.rsi,2)}</b></div>`:'')+`</div>`}
+  if(r.ok&&(r.h>100||r.h<3))h+=`<p class="sjw">⚠ ${sjFr(r.h)} cm es poco creíble para un salto. Revisa que despegue y aterrizaje estén bien marcados y que los fotogramas por segundo (${sj.fps}) sean los de la cámara.</p>`;
   if(r.msg)h+=`<p class="mut pcn sjhint">${r.msg}</p>`;
   return h}
 function sjPintar(){
